@@ -30,6 +30,37 @@ conda install ipython
 
 ## Active Wave Breaking Detection and Classification with Convolutional Networks
 
+
+- [Deep Neural Networks for Active Wave Breaking Classification](#deep-neural-networks-for-active-wave-breaking-classification)
+  * [Dependencies](#dependencies)
+  * [Active Wave Breaking Detection and Classification with Convolutional Networks](#active-wave-breaking-detection-and-classification-with-convolutional-networks)
+  * [1. Data](#1-data)
+    + [1.1. Published data](#11-published-data)
+    + [1.2. Creating a dataset from the scratch](#12-creating-a-dataset-from-the-scratch)
+    + [Example:](#example-)
+    + [Options:](#options-)
+    + [Other parameters:](#other-parameters-)
+    + [Output:](#output-)
+    + [Example:](#example--1)
+    + [Options:](#options--1)
+    + [1.2.2. Merging Datasets](#122-merging-datasets)
+    + [Example:](#example--2)
+    + [Arguments:](#arguments-)
+  * [2. Models](#2-models)
+      - [2.1. Training the Neural Network](#21-training-the-neural-network)
+    + [Example:](#example--3)
+    + [Arguments:](#arguments--1)
+      - [2.2. Pre-trained Models](#22-pre-trained-models)
+  * [3. Evaluating Model Performance](#3-evaluating-model-performance)
+    + [Arguments:](#arguments--2)
+    + [Arguments:](#arguments--3)
+  * [4. Using a Pre-trained Neural Network](#4-using-a-pre-trained-neural-network)
+    + [Example:](#example--4)
+    + [Arguments:](#arguments--4)
+    + [Output](#output)
+  * [5. Results](#5-results)
+  * [Appendix I: Standard Variable Names](#appendix-i--standard-variable-names)
+
 ## 1. Data
 
 
@@ -201,17 +232,7 @@ Optional:
 
 ## 2. Models
 
-#### 2.2. Pre-trained Models
-
-Please us the links below to download pre-trained models:
-
-- VGG16
-- ResNet50V2
-- InceptionResNetV2
-- MobileNet
-- EfficientNet
-
-#### 2.2. Training the Neural Network
+#### 2.1. Training the Neural Network
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](train_wave_breaking_classifier_v2.ipynb)
 
@@ -268,6 +289,16 @@ Optional:
 The neural network looks something like this:
 
 ![](docs/cnn.png)
+
+#### 2.2. Pre-trained Models
+
+Please us the links below to download pre-trained models:
+
+- VGG16
+- ResNet50V2
+- InceptionResNetV2
+- MobileNet
+- EfficientNet
 
 ## 3. Evaluating Model Performance
 
@@ -382,6 +413,39 @@ Graphically, the results of this script looks like this:
 ## 5. Results
 
 The table below summarizes the results presented in the paper.
+
+**Train**
+
+
+| Model             | Accuracy | TP   | FP  | TN    | FN   | Precision | Recall | AUC   |
+|-------------------|----------|------|-----|-------|------|-----------|--------|-------|
+| VGG16             | 0.93     | 855  | 273 | 13911 | 831  | 0.758     | 0.507  | 0.943 |
+| **ResNetV250**    | **0.97** | **1414** | **198** | **13978** | **280**  | **0.877**     | **0.835**  | **0.989** |
+| InceptionResnetV2 | 0.927    | 886  | 359 | 13823 | 802  | 0.712     | 0.525  | 0.932 |
+| MobileNet         | 0.904    | 436  | 268 | 13916 | 1250 | 0.619     | 0.259  | 0.848 |
+| EfficientNet      | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
+
+
+**Validation**
+
+| Model             | Accuracy | TP   | FP  | TN    | FN   | Precision | Recall | AUC   |
+|-------------------|----------|------|-----|-------|------|-----------|--------|-------|
+| **VGG16**         | **0.932**| **221**  | **65**  | **3478**  | **204**  | **0.773**     | **0.52**   | **0.946** |
+| ResNetV250        | 0.919    | 197  | 97  | 3450  | 224  | 0.67      | 0.468  | 0.873 |
+| InceptionResnetV2 | 0.921    | 190  | 81  | 3466  | 231  | 0.701     | 0.451  | 0.93  |
+| MobileNet         | 0.908    | 123  | 64  | 3479  | 302  | 0.658     | 0.289  | 0.878 |
+| EfficientNet      | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
+
+
+**Test**
+
+| Model             | Accuracy | TP   | FP  | TN    | FN   | Precision | Recall | AUC   |
+|-------------------|----------|------|-----|-------|------|-----------|--------|-------|
+| VGG16             | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
+| ResNetV250        | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
+| InceptionResnetV2 | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
+| MobileNet         | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
+| EfficientNet      | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
 
 
 ## Appendix I: Standard Variable Names
