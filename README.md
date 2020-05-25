@@ -1,2 +1,283 @@
-# deepwaves
-Code and data for Deep Neural Networks for Active Wave Breaking Classification
+# Machine Learning with Tensorflow
+
+This folder contains the deep neural networks developed under the DIME scope.
+
+**The examples shown here are only for guidance and are not the final production-ready models**
+
+## Dependencies
+
+```bash
+# create a new environment
+conda create --name tf python=3.7
+# activate your new environment
+conda activate tf
+
+# If you have a nvidia GPU installed and properly configured
+conda install tensorflow-gpu=2
+conda install tensorboard
+
+# Natsort - better file sorting
+conda install natsort
+
+# Classical machine learning
+conda install pandas scikit-learn scikit-image
+
+# Matplotlib and seaborn
+conda install matplotlib seaborn
+
+# make your life easier with ipython
+conda install ipython
+```
+
+# Training a Deep Active Wave Breaking Convolutional Network
+
+### 1. Creating a Single Training Dataset
+
+If you wish to start creating a dataset from the scratch, first you need to obtain
+wave breaking candidates. For this task use the
+[naive wave breaking detector](../stereo_video\breaking_detection\naive_wave_breaking_detector.py).
+
+Once you have some wave breaking candidates, use `prepare_data_for_classifer.py`
+to extract random samples:
+
+### Example:
+
+```bash
+python prepare_data_for_classifer.py -i "Wave_Breaking_candidates.csv" --frames "path/to/frames" -o "path/to/output" -N 100 -size 256 256 --region-of-interest "Region_of_Interest.csv"
+```
+
+### Options:
+
+- `-i [--input]` Input data obtained with `naive_wave_breaking_detector` or
+other feature extraction program.
+
+- `--frames [-frames]` Input path with extracted frames.
+
+- `--region-of-interest` Region of interest file.
+
+- `--samples [-n, -N]` Number of random samples to extract.
+
+- `-o [--output]` Output path.
+
+- `--size [-size]`  Window size and output image size.
+
+Optional:
+- `--surfaces [-surfaces]` Surfaces file (netCDF). Will extract the matching surface file.
+
+The `output` folder has the following structure:
+
+```
+├───img
+|───plt
+|───labels.csv
+└---srf
+
+```
+
+- `img` Contains the image data that is used as input data for the neural network.
+
+- `plt` Contains plots of the extract samples.
+
+- `labels.csv` This file has the same structure as the results from [naive wave breaking detector](../stereo_video\breaking_detection\naive_wave_breaking_detector.py) but with the addition of a column
+
+- `class` with the user has to manually fill assigning the correct labels by looking at the plots.
+
+`srf` If `--surfaces` is used, will save the extract surfaces in this folder.
+
+### 2. Merging Datasets
+
+To merge multiple datasets created with `prepare_data_for_classifer.py` you can use
+'merge_data_for_classifier.py'.
+
+This script can handle multi-label inputs but the out is always binary. Use the `target-labels` option to tell the script which labels should be considered as `True` (`1`) in the output.
+
+### Example:
+
+```bash
+python merge_data_for_classifier.py -i "path/to/dataset1/" "path/to/dataset2" -o "path/to/output/" --target-labels 4 5
+```
+
+**Warning**: There is possible bug in this script. Fixing for the next version.
+
+### Arguments:
+
+- `-i [--input]` Input data paths created with `prepare_data_for_classifer.py`
+
+- `-o [--output]` Output path.
+
+- `target-labels` Which labels to consider `True` in the binarization process.
+
+Optional:
+
+- `-crop-size` Will crop input images to a desired size if asked.
+
+
+### 3. Training the Neural Network
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](train_wave_breaking_classifier_v2.ipynb)
+
+
+This program loads manually labbelled wave image data and classify
+the images into "breaking" (1) or "no-breaking" (0).
+
+The data needs to be in a folder which has sub-folders "0" and "1"
+
+For example:
+```
+└───Data
+    ├───0
+    ├───1
+```
+
+There are 5 `backbones` implemented: `VGG16`, `ResNet50V2`, `InceptionResNetV2`, `MobileNet` and `EfficientNet`
+
+Note that the weights from these pre-trained models will be reset and
+updated from the scratch here.
+
+These models have no knowledge of the present data and, consequently,
+transfered learning does not work well.
+
+### Example:
+
+```bash
+python train_wave_breaking_classifier_v2.py --data "path/to/data/" --backbone "VGG16" --model "vgg_test" --logdir "path/to/logs" --random-state 11 --validation-size 0.2 --learning-rate 0.00001 --epochs 200 --batch-size 200 --dropout 0.5 --input-size 256 256
+```
+
+### Arguments:
+
+- `--data` Input train data path created with `merge_data_for_classifier.py` or manually.
+
+- `--model ` Model name.
+
+- `--backbone` Which backbone to use. See above.
+
+Optional:
+
+- `--random-state` Random seed for reproducibility. Default is 11.
+
+- `--validation-size` Size of the validation dataset. Default is 0.2.
+
+- `--epochs` Number of epochs (iterations) to train the model. Default is 200.
+
+- `--batch-size` Number of images to process in each step. Decrease if running into memory issues. Default is 64.
+
+- `--dropout` Droput percentage. Default is 0.5.
+
+- `--input-size` Image input size. Decrease if running into memory issues. Default is 256 256.
+
+
+The neural network looks something like this:
+
+![](../doc/cnn.png)
+
+### 4. Evaluating Model Performance
+
+To evaluate a pre-trained model on test data, use `test_wave_breaking_classifier.py`.
+
+```bash
+python test_wave_breaking_classifier.py --data "path/to/data/" --model "VGG16.h5" --threshold 0.5 -- output "path/to/results.csv"
+```
+
+### Arguments:
+
+- `--data` Input test data path created with `merge_data_for_classifier.py` or manually.
+
+- `--model ` Pre-trained model.
+
+- `--threshold` Threshold for binary classification. Default is 0.5
+
+- `--output` path to save the results.
+
+The `classification report` with be printed on the screen. For example:
+
+```
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.99      0.94      1025
+         1.0       0.87      0.23      0.36       175
+
+    accuracy                           0.88      1200
+   macro avg       0.88      0.61      0.65      1200
+weighted avg       0.88      0.88      0.85      1200
+```
+
+To summarize the model metrics do:
+
+```bash
+python sumarize_model_metrics.py --data "path/to/data/" --model "VGG16.h5" --threshold 0.5 -- output "path/to/metrics.csv"
+```
+
+The arguments are the same as above.
+
+The results look something like this:
+
+|VGG16    |Binary_Accuracy|True_Positives|False_Positives|True_Negatives|False_Negatives|Precision|Recall|AUC |
+|----------|---------------|--------------|---------------|--------------|---------------|---------|------|----|
+|Train     |0.89           |771.00        |248.00         |5680.00       |521.00         |0.76     |0.60  |0.92|
+|Validation|0.87           |100.00        |19.00          |1463.00       |222.00         |0.84     |0.31  |0.90|
+|Test      |0.88           |40.00         |6.00           |1019.00       |135.00         |0.87     |0.23  |0.82|
+
+To plot the training curves and a confusion matrix, do:
+
+```bash
+python plot_history_and_confusion_matrix.py --history "path/to/history.csv" --results "path/to/results.csv" --output "figure.png"
+```
+
+### Arguments:
+
+- `--history` Training history. Comes from `train_wave_breaking_classifier_v2.py`.
+
+- `--results ` Classification results from the test data. Comes from `test_wave_breaking_classifier.py`.
+
+- `--output` Figure name.
+
+The results look like this:
+![](../doc/hist_cm.png)
+
+
+### 5. Using a Pre-trained Neural Network
+
+Use the results from ```naive_wave_breaking_detector``` and a pre-trained neural network
+to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can
+be much faster on ```GPU```.
+
+For help: ```python predict_active_wave_breaking_v2.py --help```
+
+### Example:
+
+```bash
+python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "path/to/roi.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
+```
+
+### Arguments:
+
+- ```--debug``` Runs in debug mode and will save output plots.
+
+- ```-i [--input]``` Input data obtained from ```naive_wave_breaking_detector```.
+
+- ```-m [--model]``` Pre-trained Tensorflow model. See [here](https://drive.google.com/open?id=1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ).
+
+- ```-o [--output]``` Output file name (see below for explanation).
+
+- ```-frames [--frames]``` Input path with images.
+
+- ```--region-of-interest``` File with region of interest. Use [Minimun Bounding Geometry](../../util/minimum_bounding_geometry.py) to generate a valid input file.
+
+- ```-temporary-path``` Output path for debug plots.
+
+- ```--frames-to-plot``` Number of frames to plot.
+
+- ```--threshold``` Threshold for activation in the last (sigmoid) layer of the model. Default is `0.5`.
+
+***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, and `frame`.
+
+
+### Output
+
+The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of ```naive_wave_breaking_detector``` but only with data considered as **active wave breaking**.
+
+Graphically, the results of this script looks like this:
+
+![](../doc/robust_detector.gif)
+
+See also `Predict Active Wave Breaking` in [here](../stereo_videobreaking_detection/README.md).
