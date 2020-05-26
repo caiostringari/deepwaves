@@ -1,6 +1,7 @@
 # Deep Neural Networks for Active Wave Breaking Classification
 
-This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification** currently under review. A pre-print is available from A.
+This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification** currently under review. A pre-print is available from [Overleaf](https://www.overleaf.com/read/mhprcfwhryfw
+).
 
 ## Dependencies
 
