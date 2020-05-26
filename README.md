@@ -22,8 +22,20 @@ conda install natsort
 # Classical machine learning
 conda install pandas scikit-learn scikit-image
 
+# Extra thresholding methods
+pip install pythreshold
+
+# fitting circles to data
+pip install miniball
+
+# parallel computations
+pip install pebble
+
 # Matplotlib and seaborn
 conda install matplotlib seaborn
+
+# netCDF support
+conda install netCDF4 xarray
 
 # make your life easier with ipython
 conda install ipython
@@ -47,7 +59,6 @@ conda install ipython
 
 ## 1. Data
 
-
 ### 1.1. Published data
 
 Use the following links to download the pre-defined datasets.
@@ -59,7 +70,7 @@ Use the following links to download the pre-defined datasets.
 
 If you wish to start creating a dataset from the scratch, first you need to obtain
 wave breaking candidates. For this task use the
-[naive wave breaking detector](naive_wave_breaking_detector.py). It will naively detect wave breaking using an adaptive thresholding approach. This script can also be used to generate binary masks that can be used by other algorithms.
+[naive wave breaking detector](src/naive_wave_breaking_detector.py). It will naively detect wave breaking using an adaptive thresholding approach. This script can also be used to generate binary masks that can be used by other algorithms.
 
 For help: ```python naive_wave_breaking_detector.py --help```
 
@@ -87,7 +98,7 @@ python naive_wave_breaking_detector.py --debug --input "input/folder/" --output 
 
 - ```--offset``` : Mandatory parameter for ```local_threshold```. See [here](https://scikit-image.org/docs/stable/api/skimage.filters.html?highlight=threshold_local#skimage.filters.threshold_local) for details.
 
-- ```--region-of-interest``` File with region of interest. Use [Minimun Bounding Geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
+- ```--region-of-interest``` File with region of interest. Use [minimun bounding geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
 
 - ```--temporary-path``` Path to write temporary files. Will save plots to this path if in debug mode.
 
@@ -120,7 +131,7 @@ Use this option to produce less granular binary masks. Default is False.
 
 - ```--threshold-only``` If parsed, will compute thresholds and save masks only.
 
-- ```DIACAM``` Will try to processes files according to DIACAM file structure.
+- ```--DIACAM``` Will try to processes files according to DIACAM file structure.
 
 ### Other parameters:
 
@@ -199,7 +210,7 @@ The `output` folder has the following structure:
 
 - `plt` Contains plots of the extract samples.
 
-- `labels.csv` This file has the same structure as the results from [naive wave breaking detector](naive_wave_breaking_detector.py) but with the addition of a column
+- `labels.csv` This file has the same structure as the results from [naive wave breaking detector](src/naive_wave_breaking_detector.py) but with the addition of a column
 
 - `class` with the user has to manually fill assigning the correct labels by looking at the plots.
 
