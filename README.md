@@ -313,7 +313,7 @@ Please use the links below to download pre-trained models:
 - [**VGG16**]()
 - [**ResNet50V2**]()
 - [**InceptionResNetV2**]()
-- [**MobileNet**]()
+- [**MobileNet**](https://drive.google.com/open?id=1N0N03QDevACbOAi0Vq9tAMShYBX6s8EA) | [**Training History**](https://drive.google.com/open?id=194R0zOyNvh7z5AZqRnxHS34_vEQ_r6un)
 - [**EfficientNet**]()
 
 ## 3. Evaluating Model Performance
@@ -514,3 +514,7 @@ The following variables are standard and all scripts that output these quantitie
 `vi`: Velocity in the x-direction in pixels/frame.
 
 `vj`: Velocity in the y-direction in pixels/frame.
+
+## Disclaimer
+
+There is no warranty for the program, to the extent permitted by applicable law except when otherwise stated in writing the copyright holders and/or other parties provide the program “as is” without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. the entire risk as to the quality and performance of the program is with you. should the program prove defective, you assume the cost of all necessary servicing, repair or correction.
