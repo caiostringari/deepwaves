@@ -318,15 +318,18 @@ Please use the links below to download pre-trained models:
 
 ## 3. Evaluating Model Performance
 
-To evaluate a pre-trained model on test data, use `test_wave_breaking_classifier.py`.
+To evaluate a pre-trained model on test data, use the [test wave breaking classifier](src/test_wave_breaking_classifier.py) script.
+
+
+### Example:
 
 ```bash
-python test_wave_breaking_classifier.py --data "path/to/data/" --model "VGG16.h5" --threshold 0.5 -- output "path/to/results.csv"
+python test_wave_breaking_classifier.py --data "path/to/test/data/" --model "VGG16.h5" --threshold 0.5 -- output "path/to/results.csv"
 ```
 
 ### Arguments:
 
-- `--data` Input test data path created with `merge_data_for_classifier.py` or manually.
+- `--data` Input test data path created with [merge data for classifier](src/merge_data_for_classifier.py) or manually.
 
 - `--model ` Pre-trained model.
 
@@ -383,7 +386,7 @@ The results look like this:
 
 ## 4. Using a Pre-trained Neural Network
 
-Use the results from ```naive_wave_breaking_detector``` and a pre-trained neural network
+Use the results from the [naive wave breaking detector](src/naive_wave_breaking_detector.py) and a pre-trained neural network
 to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can
 be much faster on ```GPU```.
 
@@ -407,7 +410,7 @@ python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --
 
 - ```-frames [--frames]``` Input path with images.
 
-- ```--region-of-interest``` File with region of interest. Use [Minimun Bounding Geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
+- ```--region-of-interest``` File with region of interest. Use [minimun bounding geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
 
 - ```-temporary-path``` Output path for debug plots.
 
@@ -420,7 +423,7 @@ python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --
 
 ### Output
 
-The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of ```naive_wave_breaking_detector``` but only with data considered as **active wave breaking**.
+The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [naive wave breaking detector](src/naive_wave_breaking_detector.py) but only with data considered as **active wave breaking**.
 
 Graphically, the results of this script looks like this:
 
