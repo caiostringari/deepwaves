@@ -1,6 +1,6 @@
 # Deep Neural Networks for Active Wave Breaking Classification
 
-This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification**.
+This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification** currently under review. A pre-print is available from A.
 
 ## Dependencies
 
@@ -76,7 +76,7 @@ python naive_wave_breaking_detector.py --debug --input "input/folder/" --output 
 
 - ```-o [--output]``` Output file name (see below for explanation).
 
-- ```--subtract-averages``` Input path with pre-computed average images. Use [compute average image](../../util/compute_averaged_image.py) to generate valid files.
+- ```--subtract-averages``` Input path with pre-computed average images. Use [compute average image](src/compute_averaged_image.py) to generate valid files.
 
 - ```--eps``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
 
@@ -86,7 +86,7 @@ python naive_wave_breaking_detector.py --debug --input "input/folder/" --output 
 
 - ```--offset``` : Mandatory parameter for ```local_threshold```. See [here](https://scikit-image.org/docs/stable/api/skimage.filters.html?highlight=threshold_local#skimage.filters.threshold_local) for details.
 
-- ```--region-of-interest``` File with region of interest. Use [Minimun Bounding Geometry](../../util/minimum_bounding_geometry.py) to generate a valid input file.
+- ```--region-of-interest``` File with region of interest. Use [Minimun Bounding Geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
 
 - ```--temporary-path``` Path to write temporary files. Will save plots to this path if in debug mode.
 
@@ -99,7 +99,27 @@ python naive_wave_breaking_detector.py --debug --input "input/folder/" --output 
 - ```--fill-regions``` If parsed, will fill the regions defined by the clusters obtained by DBSCAN.
 Use this option to produce less granular binary masks. Default is False.
 
-- ```--block-shape 1024 1024``` Block shape to split the image into to avoid memory errors
+- ```--block-shape 1024 1024``` Block shape to split the image into to avoid memory errors.
+
+- ```--frames-to-plot``` Number of frames to plot if in debug mode.
+
+- ```--use-threshold-minerr``` If passed as True, will use Min Error algorithm.
+
+- ```--use-threshold-kapur```  If passed as True, will use Kapur algorithm.
+
+- ```--use-threshold-sauvola```  If passed as True, will use Sauvola algorithm.
+
+- ```--use-threshold-otsu```  If passed as True, will use OTSU algorithm.
+
+### Other parameters:
+
+- ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. Defaults to ```DBSCAN```.
+
+- ```-timeout``` If in parallel mode, kill a processes if its taking longer than 120 seconds per default. This helps to avoid out-of-memory issues caused by DBSCAN.
+
+- ```--threshold-only``` If parsed, will compute thresholds and save masks only.
+
+- ```DIACAM``` Will try to processes files according to DIACAM file structure.
 
 ### Other parameters:
 
@@ -217,10 +237,11 @@ Optional:
 
 #### 2.1. Training the Neural Network
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](train_wave_breaking_classifier_v2.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](notebook/train_wave_breaking_classifier_v2.ipynb)
 
+**Note**: The training dataset used here is a smaller version (10k) of the published dataset.
 
-This program loads manually labbelled wave image data and classify
+This program loads manually labeled wave image data and classify
 the images into "breaking" (1) or "no-breaking" (0).
 
 The data needs to be in a folder which has sub-folders "0" and "1"
@@ -232,7 +253,7 @@ For example:
     ├───1
 ```
 
-There are 5 `backbones` implemented: `VGG16`, `ResNet50V2`, `InceptionResNetV2`, `MobileNet` and `EfficientNet`
+There are 5 `backbones` implemented: `VGG16`, `ResNet50V2`, `InceptionResNetV2`, `MobileNetV2` and `EfficientNet`
 
 Note that the weights from these pre-trained models will be reset and
 updated from the scratch here.
@@ -275,13 +296,13 @@ The neural network looks something like this:
 
 #### 2.2. Pre-trained Models
 
-Please us the links below to download pre-trained models:
+Please use the links below to download pre-trained models:
 
-- VGG16
-- ResNet50V2
-- InceptionResNetV2
-- MobileNet
-- EfficientNet
+- [**VGG16**]()
+- [**ResNet50V2**]()
+- [**InceptionResNetV2**]()
+- [**MobileNet**]()
+- [**EfficientNet**]()
 
 ## 3. Evaluating Model Performance
 
@@ -374,7 +395,7 @@ python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --
 
 - ```-frames [--frames]``` Input path with images.
 
-- ```--region-of-interest``` File with region of interest. Use [Minimun Bounding Geometry](minimum_bounding_geometry.py) to generate a valid input file.
+- ```--region-of-interest``` File with region of interest. Use [Minimun Bounding Geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
 
 - ```-temporary-path``` Output path for debug plots.
 
