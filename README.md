@@ -63,8 +63,8 @@ conda install ipython
 
 Use the following links to download the pre-defined datasets.
 
-- Train
-- Test
+- **Train** | [Google Drive](https://drive.google.com/open?id=1xa_cdgc0MYD_e_OFZyo0ppzMnXLffQEB) | [Zenodo](Upcoming)
+- **Train** | [Google Drive](https://drive.google.com/open?id=1OJ7nWrYeqekEiluwltU0mKmcybSFvO0b) | [Zenodo](Upcoming)
 
 ### 1.2. Creating a dataset from the scratch
 

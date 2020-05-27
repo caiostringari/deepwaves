@@ -330,7 +330,7 @@ def main():
     df = pd.read_csv(args.input[0])
 
     # ckeck if all needed keys are present
-    targets = ["ic", "jc", "ir", "frame"]
+    targets = ["ic", "jc", "ir", "frame", "theta_ij"]
     for t in targets:
         if t not in df.keys():
             raise ValueError(
@@ -453,22 +453,22 @@ def main():
             # append to output
             dfs.append(df_frm)
 
-            # plot
-            if args.debug:
+        # plot
+        if args.debug:
 
-                # try to compute the ROI
-                try:
-                    _, roi_rect, _ = compute_roi(roi, fname)
-                except Exception:
-                    roi_rect = False
+            # try to compute the ROI
+            try:
+                _, roi_rect, _ = compute_roi(roi, fname)
+            except Exception:
+                roi_rect = False
 
-                try:
-                    plot(frm_id, frm, df_frm, roi=roi_rect,
-                         total_frames=len(frames), temp_path=args.temp_path[0])
-                except Exception:
-                    raise
-                    print("Warning: Could not plot frame {} of {}".format(
-                        k, len(frames)))
+            try:
+                plot(frm_id, frm, df_frm, roi=roi_rect,
+                     total_frames=len(frames), temp_path=args.temp_path[0])
+            except Exception:
+                raise
+                print("Warning: Could not plot frame {} of {}".format(
+                    k, len(frames)))
 
         # break the loop if reach the limit
         if args.debug:
