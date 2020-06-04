@@ -41,24 +41,21 @@ conda install netCDF4 xarray
 conda install ipython
 ```
 
-## Active Wave Breaking Detection and Classification with Convolutional Networks
-
 - [Deep Neural Networks for Active Wave Breaking Classification](#deep-neural-networks-for-active-wave-breaking-classification)
   * [Dependencies](#dependencies)
-  * [Active Wave Breaking Detection and Classification with Convolutional Networks](#active-wave-breaking-detection-and-classification-with-convolutional-networks)
   * [1. Data](#1-data)
     + [1.1. Published data](#11-published-data)
     + [1.2. Creating a dataset from the scratch](#12-creating-a-dataset-from-the-scratch)
       - [1.2.1. Extracting wave breaking candidates](#121-extracting-wave-breaking-candidates)
-    + [1.2.2. Sampling wave breaking candidates for training](#122-sampling-wave-breaking-candidates-for-training)
-    + [1.2.3. Merging Datasets](#123-merging-datasets)
+      - [1.2.2. Sampling wave breaking candidates for training](#122-sampling-wave-breaking-candidates-for-training)
+      - [1.2.3. Merging Datasets](#123-merging-datasets)
   * [2. Models](#2-models)
       - [2.1. Training the Neural Network](#21-training-the-neural-network)
       - [2.2. Pre-trained Models](#22-pre-trained-models)
   * [3. Evaluating Model Performance](#3-evaluating-model-performance)
   * [4. Using a Pre-trained Neural Network](#4-using-a-pre-trained-neural-network)
   * [5. Results](#5-results)
-  * [6. Appendix I: Standard Variable Names](#6-appendix-i--standard-variable-names)
+  * [6. Appendix I (Standard Variable Names)](#6-appendix-i--standard-variable-names-)
   * [Disclaimer](#disclaimer)
 
 ## 1. Data
@@ -467,7 +464,7 @@ The table below summarizes the results presented in the paper.
 | EfficientNet      | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
 
 
-## 6. Appendix I: Standard Variable Names
+## 6. Appendix I (Standard Variable Names)
 
 The following variables are standard and all scripts that output these quantities should use these names. If a given script has extra output variables, please make sure to document what each of these variables are.
 
