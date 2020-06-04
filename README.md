@@ -55,7 +55,7 @@ conda install ipython
   * [3. Evaluating Model Performance](#3-evaluating-model-performance)
   * [4. Using a Pre-trained Neural Network](#4-using-a-pre-trained-neural-network)
   * [5. Results](#5-results)
-  * [6. Appendix I (Standard Variable Names)](#6-appendix-i--standard-variable-names-)
+  * [6. Appendix I (Standard Variable Names)](#6-standard-variable-names)
   * [Disclaimer](#disclaimer)
 
 ## 1. Data
@@ -136,7 +136,7 @@ Use this option to produce less granular binary masks. Default is False.
 
 **Output:**
 
-For standard variable names, see [Appendix I: Standard Variable Names](#6-appendix-i--standard-variable-names)
+For standard variable names, see [Standard Variable Names](#6-standard-variable-names)
 
 The output is this script is a comma-separated value (csv) file. It looks like this (note the sub-pixel precision):
 
@@ -464,7 +464,7 @@ The table below summarizes the results presented in the paper.
 | EfficientNet      | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
 
 
-## 6. Appendix I (Standard Variable Names)
+## 6. Standard Variable Names
 
 The following variables are standard and all scripts that output these quantities should use these names. If a given script has extra output variables, please make sure to document what each of these variables are.
 
