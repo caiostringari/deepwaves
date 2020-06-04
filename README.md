@@ -49,13 +49,17 @@ conda install ipython
   * [1. Data](#1-data)
     + [1.1. Published data](#11-published-data)
     + [1.2. Creating a dataset from the scratch](#12-creating-a-dataset-from-the-scratch)
+      - [1.2.1. Extracting wave breaking candidates](#121-extracting-wave-breaking-candidates)
+    + [1.2.2. Sampling wave breaking candidates for training](#122-sampling-wave-breaking-candidates-for-training)
+    + [1.2.3. Merging Datasets](#123-merging-datasets)
   * [2. Models](#2-models)
       - [2.1. Training the Neural Network](#21-training-the-neural-network)
       - [2.2. Pre-trained Models](#22-pre-trained-models)
   * [3. Evaluating Model Performance](#3-evaluating-model-performance)
   * [4. Using a Pre-trained Neural Network](#4-using-a-pre-trained-neural-network)
   * [5. Results](#5-results)
-  * [Appendix I: Standard Variable Names](#appendix-i--standard-variable-names)
+  * [6. Appendix I: Standard Variable Names](#6-appendix-i--standard-variable-names)
+  * [Disclaimer](#disclaimer)
 
 ## 1. Data
 
@@ -64,9 +68,11 @@ conda install ipython
 Use the following links to download the pre-defined datasets.
 
 - **Train** | [Google Drive](https://drive.google.com/open?id=1xa_cdgc0MYD_e_OFZyo0ppzMnXLffQEB) | [Zenodo](Upcoming)
-- **Train** | [Google Drive](https://drive.google.com/open?id=1OJ7nWrYeqekEiluwltU0mKmcybSFvO0b) | [Zenodo](Upcoming)
+- **Test** | [Google Drive](https://drive.google.com/open?id=1OJ7nWrYeqekEiluwltU0mKmcybSFvO0b) | [Zenodo](Upcoming)
 
 ### 1.2. Creating a dataset from the scratch
+
+#### 1.2.1. Extracting wave breaking candidates
 
 If you wish to start creating a dataset from the scratch, first you need to obtain
 wave breaking candidates. For this task use the
@@ -74,13 +80,13 @@ wave breaking candidates. For this task use the
 
 For help: ```python naive_wave_breaking_detector.py --help```
 
-### Example:
+**Example:**
 
 ```bash
 python naive_wave_breaking_detector.py --debug --input "input/folder/" --output "output" --subtract-averages "average/folder" --eps 10 -min-samples 10 --window-size 21 --offset 10 --region-of-interest "ROI.csv" --temporary-path "tmp" --fit-method "ellipse" --nproc 4 --save-binary-masks --block-shape 1024 1024
 ```
 
-### Options:
+**Options:**
 
 - ```--debug``` Runs in debug mode and will save output plots.
 
@@ -123,23 +129,17 @@ Use this option to produce less granular binary masks. Default is False.
 
 - ```--use-threshold-otsu```  If passed as True, will use OTSU algorithm.
 
-### Other parameters:
-
 - ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. Defaults to ```DBSCAN```.
 
 - ```-timeout``` If in parallel mode, kill a processes if its taking longer than 120 seconds per default. This helps to avoid out-of-memory issues caused by DBSCAN.
 
 - ```--threshold-only``` If parsed, will compute thresholds and save masks only.
 
-- ```--DIACAM``` Will try to processes files according to DIACAM file structure.
-
-### Other parameters:
-
 - ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. Defaults to ```DBSCAN```.
 
-- ```-timeout``` If in parallel mode, kill a processes if its taking longer than 120 seconds per default. This helps to avoid out-of-memory issues caused by DBSCAN.
+**Output:**
 
-### Output:
+For standard variable names, see [Appendix I: Standard Variable Names](#6-appendix-i--standard-variable-names)
 
 The output is this script is a comma-separated value (csv) file. It looks like this (note the sub-pixel precision):
 
@@ -168,17 +168,18 @@ Graphically, the results of this script looks like this:
 
 ![](docs/naive_detector.gif)
 
+### 1.2.2. Sampling wave breaking candidates for training
 
 Once you have some wave breaking candidates, use `prepare_data_for_classifer.py`
 to extract random samples:
 
-### Example:
+**Example:**
 
 ```bash
 python prepare_data_for_classifer.py -i "Wave_Breaking_candidates.csv" --frames "path/to/frames" -o "path/to/output" -N 100 -size 256 256 --region-of-interest "Region_of_Interest.csv"
 ```
 
-### Options:
+**Options:**
 
 - `-i [--input]` Input data obtained with `naive_wave_breaking_detector` or
 other feature extraction program.
@@ -203,7 +204,6 @@ The `output` folder has the following structure:
 |───plt
 |───labels.csv
 └---srf
-
 ```
 
 - `img` Contains the image data that is used as input data for the neural network.
@@ -217,22 +217,22 @@ The `output` folder has the following structure:
 - `srf` If `--surfaces` is used, will save the extract surfaces in this folder.
 
 
-### 1.2.2. Merging Datasets
+### 1.2.3. Merging Datasets
 
 To merge multiple datasets created with `prepare_data_for_classifer.py` you can use
 'merge_data_for_classifier.py'.
 
 This script can handle multi-label inputs but the out is always binary. Use the `target-labels` option to tell the script which labels should be considered as `True` (`1`) in the output.
 
-### Example:
+**Example:**
 
 ```bash
 python merge_data_for_classifier.py -i "path/to/dataset1/" "path/to/dataset2" -o "path/to/output/" --target-labels 4 5
 ```
 
-**Warning**: There is possible bug in this script. Fixing for the next version.
+***Warning***: There is possible bug in this script. Fixing for the next version.
 
-### Arguments:
+**Arguments:**
 
 - `-i [--input]` Input data paths created with `prepare_data_for_classifer.py`
 
@@ -273,13 +273,13 @@ updated from the scratch here.
 These models have no knowledge of the present data and, consequently,
 transfered learning does not work well.
 
-### Example:
+**Example**
 
 ```bash
 python train_wave_breaking_classifier_v2.py --data "path/to/data/" --backbone "VGG16" --model "vgg_test" --logdir "path/to/logs" --random-state 11 --validation-size 0.2 --learning-rate 0.00001 --epochs 200 --batch-size 200 --dropout 0.5 --input-size 256 256
 ```
 
-### Arguments:
+**Arguments:**
 
 - `--data` Input train data path created with `merge_data_for_classifier.py` or manually.
 
@@ -321,13 +321,13 @@ Please use the links below to download pre-trained models:
 To evaluate a pre-trained model on test data, use the [test wave breaking classifier](src/test_wave_breaking_classifier.py) script.
 
 
-### Example:
+**Example:**
 
 ```bash
 python test_wave_breaking_classifier.py --data "path/to/test/data/" --model "VGG16.h5" --threshold 0.5 -- output "path/to/results.csv"
 ```
 
-### Arguments:
+**Arguments:**
 
 - `--data` Input test data path created with [merge data for classifier](src/merge_data_for_classifier.py) or manually.
 
@@ -372,7 +372,7 @@ To plot the training curves and a confusion matrix, do:
 python plot_history_and_confusion_matrix.py --history "path/to/history.csv" --results "path/to/results.csv" --output "figure.png"
 ```
 
-### Arguments:
+**Arguments:**
 
 - `--history` Training history. Comes from `train_wave_breaking_classifier_v2.py`.
 
@@ -392,13 +392,13 @@ be much faster on ```GPU```.
 
 For help: ```python predict_active_wave_breaking_v2.py --help```
 
-### Example:
+**Example**
 
 ```bash
 python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "path/to/roi.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
 ```
 
-### Arguments:
+**Arguments**
 
 - ```--debug``` Runs in debug mode and will save output plots.
 
@@ -421,7 +421,7 @@ python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --
 ***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, and `frame`.
 
 
-### Output
+**Output:**
 
 The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [naive wave breaking detector](src/naive_wave_breaking_detector.py) but only with data considered as **active wave breaking**.
 
@@ -467,7 +467,7 @@ The table below summarizes the results presented in the paper.
 | EfficientNet      | 0        | 0    | 0   | 0     | 0    | 0         | 0      | 0     |
 
 
-## Appendix I: Standard Variable Names
+## 6. Appendix I: Standard Variable Names
 
 The following variables are standard and all scripts that output these quantities should use these names. If a given script has extra output variables, please make sure to document what each of these variables are.
 
