@@ -5,15 +5,14 @@
 # SCRIPT   : naive_wave_breaking_detector.py
 # POURPOSE : detect wave breaking using a "naive" local thresholding approach
 # AUTHOR   : Caio Eadi Stringari
-# EMAIL    : caio.stringari@gmail.com
-#
 # V2.0     : 06/04/2020 [Caio Stringari]
 #
 #
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
 r"""
-Detect wave breaking using a naive approach, i.e., by thresholding.
+Detect wave breaking using a naive approach, i.e., by thresholding
+and clustering.
 
 Usage:
 -----
@@ -21,27 +20,19 @@ python naive_wave_breaking_detector.py --help
 
 Example:
 -------
-
 python naive_wave_breaking_detector.py --debug \
                                        -i "input/folder/"  \
-                                       -o "output" \
+                                       -o "output.csv" \
                                        --subtract-averages "average/folder" \
-                                       --eps 10 \
-                                       --min-samples 10 \
-                                       --window-size 21 \
-                                       --offset 10 \
-                                       --region-of-interest "ROI.csv" \
+                                       --cluster "dbscan" 10 10
+                                       --threshold "adaptative" 11 10,
+                                       --region-of-interest "file.csv" \
                                        --temporary-path "tmp" \
                                        --fit-method "ellipse" \
                                        --nproc 4 \
-                                       --save-binary-masks \
-                                       --fill-regions \
                                        --block-shape 1024 1024
 
-Explanation:
------------
-
---debug : runs in debug mode, will save output plots
+--debug : runs in debug mode, will use only 1 processor and save output plots
 
 -i : input path with images
 
@@ -50,16 +41,14 @@ Explanation:
 --subtract-averages : input path with pre-computed average images.
                       use compute_average_image.py to get valid files
 
---eps : eps parameter for DBSCAN or OPTICS
+--cluster : cluster method and parameters. Only DBSCAN is functional.
 
---min-samples : min_samples parameter for DBSCAN or OPTICS
+--threshold : which thresholding method to use. Default is adaptative which
+              requires the window size and offset. Valid options are: otsu,
+              entropy, constant, and file.
 
---window-size : window size for local_threshold
-
---offset : offset size for local_threshold
-
---region-of-interest : file with region of interest.
-                       use minimun_bounding_geometry.py)
+--region-of-interest : file with region of interest. use minimun_bounding_geometry.py
+                       to get a valid file.
 
 --temporary-path : path to write temporary files and/or plots if in debug mode
 
@@ -68,24 +57,16 @@ Explanation:
 
 --nproc 4 : number of processors to use if not in debub mode
 
---save-binary-masks : if parsed, will save the binary masks
-
---fill-regions : if parsed, will fill the regions inside a cluster.
-
 --block-shape 1024 1024 : block shape to split the image into to avoid memory
                           errors
 
-Other parameters:
+--frames-to-plot : number of frames to plot if in debug mode.
 
---cluster-method : either DBSCAN or OPTICS. Defaults to DBSCAN.
-
---timeout : in parallel mode, kill a processes if taking longer than 120
-            seconds per default.
 
 Output:
 ------
 
-The output CSV columns are organized as follows:
+The output csv columns are organized as follows:
 
     ic : The i coordinate center of a cluster (image referential)
     jc : The j coordinate center of a cluster (image referential)
@@ -101,25 +82,21 @@ The output CSV columns are organized as follows:
     block_j_top : Block end  in  the j-direction (image referential)
     block_j_bottom : Block start the j-direction (image referential)
     frame : sequential frame number
-
-If "save_binary_mask" is passed will save the binary mask in the root folder
-of this script.
 """
-
 import matplotlib as mpl
 # mpl.use("Agg")
 
 import os
 import shutil
-import subprocess
-
-import sys
 
 import argparse
 from glob import glob
 from natsort import natsorted
 
 import numpy as np
+
+# regular expressions =(
+import re
 
 # parallel processing
 from itertools import repeat
@@ -129,19 +106,14 @@ except Exception:
     ImportError("run pip install pebble.")
 from concurrent.futures import TimeoutError
 
-# decompression
-import bz2
-
 # image utils
-from skimage.io import imread, imsave
+from skimage.io import imread
 from skimage.color import rgb2gray
-from skimage.filters import threshold_local, threshold_otsu, threshold_sauvola
-from skimage.util import img_as_float, img_as_ubyte, img_as_uint
+from skimage.util import img_as_float, img_as_ubyte
 from skimage.util import view_as_blocks
-from skimage.exposure import rescale_intensity
-
+from skimage.filters import threshold_local
 try:
-    from pythreshold.global_th import min_err_threshold
+    from pythreshold.global_th import otsu_threshold
     from pythreshold.global_th.entropy import kapur_threshold
     from pythreshold.utils import apply_threshold
 except Exception:
@@ -153,11 +125,15 @@ except Exception:
     ImportError("run pip install miniball.")
 
 import numpy.linalg as la
-from scipy.spatial import ConvexHull
 
 # ML
 from sklearn.utils import parallel_backend
 from sklearn.cluster import DBSCAN, OPTICS
+
+try:
+    import hdbscan
+except Exception:
+    ImportError("run pip install hdbscan.")
 
 # pandas for I/O
 import pandas as pd
@@ -171,10 +147,6 @@ import matplotlib.patches as patches
 # quite skimage warnings
 import warnings
 warnings.filterwarnings("ignore")
-
-# This locks sklearn and makes sure it does not create more processes than
-# what it"s being asked for.
-parallel_backend("multiprocessing", n_jobs=1)
 
 
 def mvee(points, tol=0.001):
@@ -201,21 +173,21 @@ def mvee(points, tol=0.001):
     """
     N, d = points.shape
     Q = np.column_stack((points, np.ones(N))).T
-    err = tol+1.0
-    u = np.ones(N)/N
+    err = tol + 1.0
+    u = np.ones(N) / N
     while err > tol:
         # assert u.sum() == 1 # invariant
         X = np.dot(np.dot(Q, np.diag(u)), Q.T)
         M = np.diag(np.dot(np.dot(Q.T, la.inv(X)), Q))
         jdx = np.argmax(M)
-        step_size = (M[jdx]-d-1.0)/((d+1)*(M[jdx]-1.0))
-        new_u = (1-step_size)*u
+        step_size = (M[jdx] - d - 1.0) / ((d + 1) * (M[jdx] - 1.0))
+        new_u = (1 - step_size) * u
         new_u[jdx] += step_size
-        err = la.norm(new_u-u)
+        err = la.norm(new_u - u)
         u = new_u
     c = np.dot(u, points)
     A = la.inv(np.dot(np.dot(points.T, np.diag(u)), points)
-               - np.multiply.outer(c, c))/d
+               - np.multiply.outer(c, c)) / d
     return A, c
 
 
@@ -242,7 +214,7 @@ def get_ellipse_parameters(A):
     U, D, V = la.svd(A)
 
     # x, y radii.
-    rx, ry = 1./np.sqrt(D)
+    rx, ry = 1. / np.sqrt(D)
 
     # Major and minor semi-axis of the ellipse.
     dx, dy = 2 * rx, 2 * ry
@@ -257,7 +229,7 @@ def get_ellipse_parameters(A):
     # orientation angle (with respect to the x axis counterclockwise).
     theta = arccos if arcsin > 0. else -1. * arccos
 
-    return a/2, b/2, theta, e
+    return a / 2, b / 2, theta, e
 
 
 def split(a, n):
@@ -336,13 +308,6 @@ def nextpow2(i):
     return n
 
 
-def point_in_hull(point, hull, tolerance=1e-12):
-    """Verify if a point is inside a convex Hull."""
-    return all(
-        (np.dot(eq[:-1], point) + eq[-1] <= tolerance)
-        for eq in hull.equations)
-
-
 def compute_roi(roi, frame_path):
     """
     Compute  the region of interest (ROI) and a mask.
@@ -375,7 +340,13 @@ def compute_roi(roi, frame_path):
     if isinstance(roi, pd.DataFrame):
 
         # select frame
-        idx = int(os.path.basename(frame_path).split(".")[0])
+        # idx = int(os.path.basename(frame_path).split(".")[0])
+
+        # try to figure out frame number
+        input_text = frame_path
+        res = re.search("[0-9]{6,}", input_text)
+        idx = int(res.group())
+
         roi = roi.loc[roi["frame"] == idx]
         roi = [int(roi["i"]), int(roi["j"]),
                int(roi["width"]), int(roi["height"])]
@@ -387,7 +358,7 @@ def compute_roi(roi, frame_path):
         rec_patch = patches.Rectangle((int(roi[0]), int(roi[1])),
                                       int(roi[2]), int(roi[3]),
                                       linewidth=2,
-                                      edgecolor="r",
+                                      edgecolor="deepskyblue",
                                       facecolor="none",
                                       linestyle="--")
     # if it is not a dataframe
@@ -417,8 +388,8 @@ def compute_roi(roi, frame_path):
     return roi_coords, rec_patch, mask
 
 
-def cluster(img, eps, min_samples, backend="DBSCAN", fit_kind="circle",
-            compute_convex_hull=False):
+def cluster(img, eps, min_samples, backend="dbscan", nthreads=2,
+            fit_kind="circle"):
     """
     Cluster group of pixels.
 
@@ -434,8 +405,6 @@ def cluster(img, eps, min_samples, backend="DBSCAN", fit_kind="circle",
         Which backend to use for clustering. Default is DBSCAN.
     fit_kind : str
         What type of geometry to fir to the clusters. Default is circle.
-    compute_convex_hull : bool
-        If true, will compute the ConvexHull of the custers. Default is False.
 
     Returns:
     -------
@@ -445,100 +414,100 @@ def cluster(img, eps, min_samples, backend="DBSCAN", fit_kind="circle",
     ipx, jpx = np.where(img)  # gets where img == 1
     X = np.vstack([ipx, jpx]).T
 
-    if len(X) <= min_samples:
-        raise ValueError("Not enough samples to appy DBSCAN.")
+    if len(X) > min_samples:
+        if backend.lower() == "optics":
+            db = OPTICS(cluster_method="dbscan",
+                        metric="euclidean",
+                        eps=eps,
+                        max_eps=eps,
+                        min_samples=min_samples,
+                        min_cluster_size=min_samples,
+                        n_jobs=nthreads,
+                        algorithm="ball_tree").fit(X)
+            labels = db.labels_
+        elif backend.lower() == "hdbscan":
+            db = hdbscan.HDBSCAN(min_cluster_size=int(min_samples),
+                                 metric="euclidean",
+                                 allow_single_cluster=True,
+                                 core_dist_n_jobs=nthreads)
+            labels = db.fit_predict(X)
+        elif backend.lower() == "dbscan":
+            db = DBSCAN(eps=eps,
+                        metric="euclidean",
+                        min_samples=min_samples,
+                        n_jobs=nthreads,
+                        algorithm="ball_tree").fit(X)
+            labels = db.labels_
+        else:
+            raise ValueError("Use either DBSCAN or OPTICS.")
 
-    if backend == "OPTICS":
-        db = OPTICS(cluster_method="dbscan",
-                    metric="euclidean",
-                    eps=eps,
-                    max_eps=eps,
-                    min_samples=min_samples,
-                    min_cluster_size=min_samples,
-                    n_jobs=1,
-                    algorithm="ball_tree").fit(X)
-    elif backend == "DBSCAN":
-        db = DBSCAN(eps=eps,
-                    metric="euclidean",
-                    min_samples=min_samples,
-                    n_jobs=1,
-                    algorithm="ball_tree").fit(X)
-    else:
-        raise ValueError("Use either DBSCAN or OPTICS.")
-    labels = db.labels_
+        # to dataframe
+        df = pd.DataFrame(X, columns=["j", "i"])
+        df["cluster"] = labels
+        df = df[df["cluster"] >= 0]
 
-    # to dataframe
-    df = pd.DataFrame(X, columns=["j", "i"])
-    df["cluster"] = labels
-    df = df[df["cluster"] >= 0]
+        # get centers and radii
+        cluster = []
+        i_center = []
+        j_center = []
+        n_pixels = []
+        R1 = []
+        R2 = []
+        theta = []
+        for cl, gdf in df.groupby("cluster"):
 
-    # get centers and radii
-    cluster = []
-    i_center = []
-    j_center = []
-    n_pixels = []
-    R1 = []
-    R2 = []
-    theta = []
-    hulls = []
-    for cl, gdf in df.groupby("cluster"):
-
-        # fit a circle
-        if fit_kind == "circle":
-            c, r2 = miniball.get_bounding_ball(
-                gdf[["i", "j"]].values.astype(float))
-            xc, yc = c
-            r1 = np.sqrt(r2)
-            r2 = r1   # these are for ellipses only
-            t = 0  # these are for ellipses only
-        elif fit_kind == "ellipse":
-            try:
-                # compute the minmun bounding ellipse
-                A, c = mvee(gdf[["i", "j"]].values.astype(float))
-                # centroid
-                xc, yc = c
-                # radius, angle and eccentricity
-                r1, r2, t, _ = get_ellipse_parameters(A)
-            except Exception:
-                # fall back to circle
+            # fit a circle
+            if fit_kind == "circle":
                 c, r2 = miniball.get_bounding_ball(
                     gdf[["i", "j"]].values.astype(float))
                 xc, yc = c
                 r1 = np.sqrt(r2)
                 r2 = r1   # these are for ellipses only
                 t = 0  # these are for ellipses only
-        else:
-            raise ValueError("Can only fit data to circles or ellipses.")
-        # append to output
-        i_center.append(xc)
-        j_center.append(yc)
-        cluster.append(cl)
-        n_pixels.append(len(gdf))
-        R1.append(r1)
-        R2.append(r2)
-        theta.append(t)
+            elif fit_kind == "ellipse":
+                try:
+                    # compute the minmun bounding ellipse
+                    A, c = mvee(gdf[["i", "j"]].values.astype(float))
+                    # centroid
+                    xc, yc = c
+                    # radius, angle and eccentricity
+                    r1, r2, t, _ = get_ellipse_parameters(A)
+                except Exception:
+                    # fall back to circle
+                    c, r2 = miniball.get_bounding_ball(
+                        gdf[["i", "j"]].values.astype(float))
+                    xc, yc = c
+                    r1 = np.sqrt(r2)
+                    r2 = r1   # these are for ellipses only
+                    t = 0  # these are for ellipses only
+            else:
+                raise ValueError("Can only fit data to circles or ellipses.")
+            # append to output
+            i_center.append(xc)
+            j_center.append(yc)
+            cluster.append(cl)
+            n_pixels.append(len(gdf))
+            R1.append(r1)
+            R2.append(r2)
+            theta.append(t)
 
-        if compute_convex_hull:
-            hull = ConvexHull(gdf[["i", "j"]].values.astype(float))
-            hulls.append(hull)
+        # to dataframe
+        x = np.vstack([i_center, j_center, n_pixels,
+                       R1, R2, theta,
+                       cluster]).T
+        columns = ["ic", "jc", "pixels", "ir", "jr", "theta_ij", "cluster"]
+        df = pd.DataFrame(x, columns=columns)
 
-    # to dataframe
-    x = np.vstack([i_center, j_center, n_pixels,
-                   R1, R2, theta,
-                   cluster]).T
-    columns = ["ic", "jc", "pixels", "ir", "jr", "theta_ij", "cluster"]
-    df = pd.DataFrame(x, columns=columns)
+        return df
 
-    return df, hulls
+    else:
+        return pd.DataFrame()
 
 
-def detector(frame, average, path, eps, min_samples, win_size,
-             offset, roi, debug, total_frames=False,
-             cluster_kind="DBSCAN", fit_kind="circle",
-             block_shape=(256, 256),
-             save_binary_masks=False,
-             THRESHOLD_METHOD="kapur", THRESHOLD_ONLY=False,
-             FILL_CLUSTERS=False):
+def detector(frame, average, roi, output, cluster_pars=["dbscan", 10, 10],
+             threshold_pars=["otsu"],
+             total_frames=False, fit_kind="circle",
+             block_shape=(256, 256), nthreads=2, debug=False):
     """
     Detect whitecapping using a local thresholding approach.
 
@@ -551,74 +520,51 @@ def detector(frame, average, path, eps, min_samples, win_size,
     averages : str
         Full average path.
         Use compute_average_image.py to obtain the averages.
-    path : str
-        Output path for the processed data.
-    eps : foat
-        The eps parameter for DBSCAN.
-    min_samples : int
-        The min_samples parameter for DBSCAN.
-    win_size : int
-        Size of the "convolution" box for local_threshold.
-    offset : int
-        Not exactly sure what this does. See skimage documentation.
     roi : list or pd.DataFrame
         Region of interest for processing.
         Use minmun_bounding_geometry.py to obtain a valid file.
-    debug : bool
-        Run in debug mode. will run in serial and plot outputs.
+    output : str
+        Output path for the processed data.
+    cluster_pars : list
+        List of parameters for clustering.
+    threshold_pars : list
+        List of parameters for thresholding.
     total_frames: int
-        Total number of frames. for ploting only
-    cluster_kind : str
-        Either DBSCAN or OPTICS.
+        Total number of frames. for plotting only
     fit_kind : str
         What geometry to fit to a cluster. Can be either circle or ellipse.
     block_shape : tupple
-        bBlock size for view_as_blocks. must be a power of 2
-    save_binary_mask : bool
-        If true, will save the binary image
+        Block size for view_as_blocks. must be a power of 2
+    debug : bool
+        Run in debug mode. will run in serial and plot outputs.
 
     Returns:
     -------
         Nothing. Will write to file instead.
     """
-
+    # try to figure out frame number and process ID
     PID = os.getpid()
-    print("  -- started processing frame:",
-          os.path.basename(frame).split(".")[0], "PID:", PID)
+    frmid = int(re.search("[0-9]{6,}", frame).group())
+    print("  -- started processing frame", frmid, "of", total_frames, "with PID", PID)
 
     # ---- try the detection pipeline ----
     try:
 
-        # load the images
-        if frame.endswith("bz2"):
-
-            # copy and decompress
-            frame_nbr = int(os.path.basename(frame).split("_")[1])
-            newframepath = "decomp/{}.tif.bz2".format(str(frame_nbr).zfill(8))
-            shutil.copyfile(frame, newframepath)
-
-            cmd = "bzip2 -d {}".format(newframepath)
-            subprocess.run(cmd, shell=True)
-
-            # now its a regular file
-            wrkframe = newframepath.strip(".bz2")
-
-        else:
-            wrkframe = frame
-
         # read
-        img = img_as_float(rgb2gray(imread(wrkframe)))
+        img = img_as_float(rgb2gray(imread(frame)))
 
         # ---- deal with roi ----
         try:
-            roi_coords, roi_rect, mask = compute_roi(roi, wrkframe)
+            roi_coords, roi_rect, mask = compute_roi(roi, frame)
         except Exception:
-            print("  -- died because of ROI processing frame:",
-                  os.path.basename(wrkframe).split(".")[0], "PID:", PID)
+            print("   -- died because of Region of Interest processing frame", frmid)
             return 0
 
-        # read average image
-        avg = img_as_float(rgb2gray(imread(average)))
+        # try to read average image
+        try:
+            avg = img_as_float(rgb2gray(imread(average)))
+        except Exception:
+            avg = np.zeros(img.shape)
 
         # remove average and mask where the intensity decreases
         dif = img - avg
@@ -632,61 +578,43 @@ def detector(frame, average, path, eps, min_samples, win_size,
         avg = img_as_ubyte(avg)
 
         # threshold
-        if THRESHOLD_METHOD == "otsu":
+        if threshold_pars[0] == "otsu":
+            trx = otsu_threshold(dif)
+            bin_img = apply_threshold(dif * mask, trx)
+            bin_img = np.invert(bin_img)
 
-            global_thresh = threshold_otsu((dif * mask))
-            maxpx = (dif * mask).max()
-            bin_img = (dif * mask) < (maxpx-global_thresh)
-
-        elif THRESHOLD_METHOD == "sauvola":
-            thresh_sauvola = threshold_sauvola(dif * mask,
-                                               window_size=win_size)
-            bin_img = dif > thresh_sauvola
-
-        elif THRESHOLD_METHOD == "kapur":
+        elif threshold_pars[0] == "entropy":
             kptrx = kapur_threshold(dif)
-            bin_img = apply_threshold(dif*mask, kptrx)
+            bin_img = apply_threshold(dif * mask, kptrx)
             bin_img = np.invert(bin_img)
 
-        elif THRESHOLD_METHOD == "minerr":
-            metrx = min_err_threshold(rescale_intensity(dif))
-            bin_img = apply_threshold(dif*mask, metrx)
-            bin_img = np.invert(bin_img)
-
-        # default
-        elif THRESHOLD_METHOD == "adaptative":
-            local_thresh = threshold_local(dif * mask, win_size,
-                                           offset=offset)
+        elif threshold_pars[0] == "adaptative":
+            local_thresh = threshold_local(dif * mask, threshold_pars[1],
+                                           offset=threshold_pars[2])
             bin_img = dif > local_thresh
+
+        elif threshold_pars[0] == "constant":
+            bin_img = apply_threshold(dif * mask, int(threshold_pars[1]))
+            bin_img = np.invert(bin_img)
+
+        elif threshold_pars[0] == "file":
+            trxdf = pd.read_csv(threshold_pars[1])
+            nearest = trxdf["frame"].values[np.argmin(np.abs(frmid-trxdf["frame"].values))]
+            bin_img = apply_threshold(dif * mask, trxdf.iloc[nearest]["threshold"])
+            bin_img = np.invert(bin_img)
+
         else:
-            raise ValueError("THRESHOLD_METHOD is invalid.")
-
-        # save binaty masks
-        if save_binary_masks.lower() != "False".lower():
-            fname = os.path.basename(wrkframe).split(".")[0]
-            imsave("{}/{}".format(save_binary_masks, fname+".png"),
-                   img_as_uint(np.invert(bin_img)))
-
-        if THRESHOLD_ONLY:
-            print("  -- finished processing frame:",
-                  os.path.basename(wrkframe).split(".")[0], "PID:", PID)
-            print("  -- only computed the threshold (as requested).")
-            return 1
+            raise ValueError("Fatal: could not deal with thresholding method.")
 
         # ensure the shape is right for processing as blocks
         bin_img, block_shape = ensure_shape(bin_img, block_shape)
 
         view = view_as_blocks(bin_img, tuple(block_shape.tolist()))
 
-        if FILL_CLUSTERS:
-            compute_hull = True
-        else:
-            compute_hull = False
-
+        # outputs
         dfs = []  # store dbscan results
-        Hulls = []  # only used if FILL_CLUSTERS is True
-        i_offset = []  # only used if FILL_CLUSTERS is True
-        j_offset = []  # only used if FILL_CLUSTERS is True
+
+        # loop over image blocks
         for i in range(view.shape[0]):
             for j in range(view.shape[1]):
 
@@ -701,37 +629,32 @@ def detector(frame, average, path, eps, min_samples, win_size,
 
                 # try to group bright pixels
                 try:
-                    df, hulls = cluster(np.invert(blk), eps, min_samples,
-                                        backend=cluster_kind,
-                                        fit_kind=fit_kind,
-                                        compute_convex_hull=compute_hull)
-                    if isinstance(df, pd.DataFrame):
-                        if not df.empty:
+                    df = cluster(np.invert(blk),
+                                 cluster_pars[1],
+                                 cluster_pars[2],
+                                 backend=cluster_pars[0],
+                                 nthreads=nthreads,
+                                 fit_kind=fit_kind)
+                    if not df.empty:
 
-                            # fix offsets
-                            # i, j need to swaped here, not sure why
-                            df["ic"] = df["ic"] + j1
-                            df["jc"] = df["jc"] + i1
+                        # fix offsets
+                        # i, j need to swaped here, not sure why
+                        df["ic"] = df["ic"] + j1
+                        df["jc"] = df["jc"] + i1
 
-                            # add info about the processing blocks
-                            df["block_i"] = j
-                            df["block_j"] = i
-                            df["block_i_left"] = j1
-                            df["block_i_right"] = j2
-                            df["block_j_top"] = i1
-                            df["block_j_bottom"] = i2
+                        # add info about the processing blocks
+                        df["block_i"] = j
+                        df["block_j"] = i
+                        df["block_i_left"] = j1
+                        df["block_i_right"] = j2
+                        df["block_j_top"] = i1
+                        df["block_j_bottom"] = i2
 
-                            # append
-                            dfs.append(df)
-
-                        # if hulls,
-                        if hulls:
-                            for h in hulls:
-                                Hulls.append(h)
-                                i_offset.append(j1)
-                                j_offset.append(i1)
+                        # append
+                        dfs.append(df)
 
                 except Exception:
+                    raise
                     pass  # do nothing here
                     # it means that a block search failled
 
@@ -741,72 +664,46 @@ def detector(frame, average, path, eps, min_samples, win_size,
 
             # add some extra information
             # df_dbscan["step"] = int(os.path.basename(frame).split(".")[0])
-            df_dbscan["frame"] = os.path.basename(wrkframe).strip(".png")
+            df_dbscan["frame"] = frmid
 
             # write to file
-            fname = os.path.basename(wrkframe).split(".")[0] + ".csv"
-            df_dbscan.to_csv(os.path.join(path, fname), index=False)
+            fname = str(frmid).zfill(8) + ".csv"
+            df_dbscan.to_csv(os.path.join(output, fname), index=False)
         else:
-            print("  -- died because of dbscan processing frame:",
-                  os.path.basename(wrkframe).split(".")[0], "PID:", PID)
+            print("   -- no clusters were found processing frame", frmid)
+            df_dbscan = pd.DataFrame()
             return 0
-
-        # if the convex hulls were computed, fill the regions defined by
-        # each cluster. This is slow. Only do it if you really need this data
-        if Hulls:
-            i_inside = []
-            j_inside = []
-            for hull, ioff, joff in zip(Hulls, i_offset, j_offset):
-
-                igrd = np.arange(hull.points[:, 0].min()-1,
-                                 hull.points[:, 0].max()+1, 1)
-
-                jgrd = np.arange(hull.points[:, 1].min()-1,
-                                 hull.points[:, 1].max()+1, 1)
-
-                X, Y = np.meshgrid(igrd, jgrd)
-
-                for i, j in zip(X.flatten(), Y.flatten()):
-                    if point_in_hull((i, j), hull):
-                        i_inside.append(i + ioff)
-                        j_inside.append(j + joff)
-
-            # update binary image
-            bin_img[np.array(j_inside).astype(int),
-                    np.array(i_inside).astype(int)] = 0
 
         # debug plot
         if debug:
-            fig, ax = plot(wrkframe, img, bin_img, block_shape, roi_rect,
+            fig, ax = plot(frmid, img, bin_img, block_shape, roi_rect,
                            df_dbscan, total_frames, fit_kind)
 
             # save to file
-            # plt.show()
-            fname = os.path.basename(wrkframe).split(".")[0] + ".png"
-            plt.savefig(os.path.join(path, fname), dpi=200,
+            fname = str(frmid).zfill(8) + ".png"
+            plt.savefig(os.path.join(output, fname), dpi=150,
                         bbox_inches="tight", pad_inches=0.1)
+            # plt.show()
             plt.close()
 
     except Exception:
         raise
-        print("  -- died for some unknown reason processing frame:",
-              os.path.basename(wrkframe).split(".")[0], "PID:", PID)
+        print("   -- died for some unknown reason processing frame", frmid)
 
-    print("  -- finished processing frame:",
-          os.path.basename(wrkframe).split(".")[0], "PID:", PID)
+    print("   -- finished processing frame", frmid)
 
     return 1
 
 
-def plot(frame, img, bin_img, block_shape, roi_rect, df, total_frames,
+def plot(frmid, img, bin_img, block_shape, roi_rect, df, total_frames,
          fit_kind):
     """
     Plot the results of the detection.
 
     Parameters:
     ----------
-    frame : str
-        Full frame path.
+    frmid : str
+        frame sequential number.
     img : np.ndarray
         Input image.
     bin_img : np.ndarray
@@ -835,57 +732,56 @@ def plot(frame, img, bin_img, block_shape, roi_rect, df, total_frames,
     # plot the idinetified breaking pixels
     bin = np.invert(bin_img).astype(int)
     bin = np.ma.masked_less(bin, 1)
-    binmap = mpl.colors.ListedColormap("lawngreen")
-    ax.imshow(bin, cmap=binmap, alpha=0.5)
+    binmap = mpl.colors.ListedColormap("red")
+    ax.imshow(bin, cmap=binmap, alpha=1, zorder=10)
 
     # draw the processing blocks
     k = 0
-    for i, gdf in df.groupby(["block_i", "block_j"]):
-        color = plt.cm.tab20(k)
-        for i, row in gdf.iterrows():
-            c = patches.Rectangle((row["block_i_left"],
-                                   row["block_j_top"]),
-                                  block_shape[0], block_shape[1],
-                                  facecolor="none",
-                                  edgecolor=color,
-                                  linewidth=2)
-            ax.add_artist(c)
-        k += 1
+    if not df.empty:
+        for i, gdf in df.groupby(["block_i", "block_j"]):
+            color = sns.color_palette("hls", df.groupby(["block_i", "block_j"]).ngroups)[k]
+            for i, row in gdf.iterrows():
+                c = patches.Rectangle((row["block_i_left"],
+                                       row["block_j_top"]),
+                                      block_shape[0], block_shape[1],
+                                      facecolor="none",
+                                      edgecolor=color,
+                                      linewidth=2)
+                ax.add_artist(c)
+            k += 1
 
     # draw dbscan results
     k = 0
-    for _, gdf in df.groupby(["block_i", "block_j"]):
-        for i, row in gdf.iterrows():
-            color = plt.cm.tab20(i)
-            ax.scatter(row["ic"], row["jc"], s=80, marker="+",
-                       linewidth=2, alpha=1, color=color)
-            if fit_kind == "circle":
-                c = patches.Circle((row["ic"], row["jc"]),
-                                   row["ir"],
-                                   facecolor="none",
-                                   edgecolor=color,
-                                   linewidth=2)
-            elif fit_kind == "ellipse":
-                c = patches.Ellipse((row["ic"], row["jc"]),
-                                    row["ir"]*2, row["jr"]*2,
-                                    angle=row["theta_ij"],
-                                    facecolor="none",
-                                    edgecolor=color,
-                                    linewidth=2)
-            else:
-                raise ValueError("Can fit to circles or ellipses.")
-            ax.add_artist(c)
-        k += 1
+    if not df.empty:
+        for _, gdf in df.groupby(["block_i", "block_j"]):
+            for i, row in gdf.iterrows():
+                color = sns.color_palette("hls", df.groupby(["block_i", "block_j"]).ngroups)[k]
+                ax.scatter(row["ic"], row["jc"], s=80, marker="+",
+                           linewidth=2, alpha=1, color=color)
+                if fit_kind == "circle":
+                    c = patches.Circle((row["ic"], row["jc"]),
+                                       row["ir"],
+                                       facecolor="none",
+                                       edgecolor=color,
+                                       linewidth=2)
+                elif fit_kind == "ellipse":
+                    c = patches.Ellipse((row["ic"], row["jc"]),
+                                        row["ir"] * 2, row["jr"] * 2,
+                                        angle=row["theta_ij"],
+                                        facecolor="none",
+                                        edgecolor=color,
+                                        linewidth=2)
+                else:
+                    raise ValueError("Can fit to circles or ellipses.")
+                ax.add_artist(c)
+            k += 1
 
     # draw roi
     if isinstance(roi_rect, patches.Rectangle):
         ax.add_patch(copy(roi_rect))
 
     # draw frame number
-    L = len(str(total_frames))
-    frame_number = str(int(
-        os.path.basename(frame).split(".")[0])).zfill(L)
-    txt = "Frame {} of {}".format(frame_number, total_frames)
+    txt = "Frame {} of {}".format(frmid, str(total_frames))
     ax.text(0.01, 0.01, txt, color="deepskyblue",
             va="bottom", zorder=100, transform=ax.transAxes,
             ha="left", fontsize=14,
@@ -908,18 +804,10 @@ def main():
     # verify if the input path exists,
     # if it does, then get the frame names
     inp = args.input[0]
-    if DIACAM:
-        possible_frames = natsorted(glob(inp+"/*_02.tif.bz2"))
-        frames = []
-        for f in possible_frames:
-            # skip mean frames
-            if "Mean_Frame_" not in f:
-                frames.append(f)
+    if os.path.isdir(inp):
+        frames = natsorted(glob(inp + "/*"))
     else:
-        if os.path.isdir(inp):
-            frames = natsorted(glob(inp + "/*"))
-        else:
-            raise IOError("No such file or directory \"{}\"".format(inp))
+        raise IOError("No such file or directory \"{}\"".format(inp))
 
     # load roi and verify if its a file
     if args.roi[0]:
@@ -928,12 +816,6 @@ def main():
     # create the output path, if not present
     temp_path = os.path.abspath(args.temp_path[0])
     os.makedirs(temp_path, exist_ok=True)
-
-    os.makedirs("decomp", exist_ok=True)
-
-    # create binary mask output
-    if SAVE_BINARY_MASK.lower() != "False".lower():
-        os.makedirs(SAVE_BINARY_MASK, exist_ok=True)
 
     # find and match frames and averages
     avgs = args.subtract_avg[0]
@@ -958,8 +840,9 @@ def main():
     if args.roi[0]:
         if is_roi_file:
             roi = pd.read_csv(args.roi[0])
-            # fill nans with the previous valid values
-            roi = roi.fillna(method="backfill")
+            # fill nans with the previous/next valid values
+            roi = roi.fillna(method="bfill")
+            roi = roi.fillna(method="ffill")
 
             # check sizes
             if len(roi) != len(frames):
@@ -980,63 +863,70 @@ def main():
     else:
         roi = False
 
-    # full call for this function is
-    # local_detector(frame, average, path, eps, min_samples, win_size,
-    #                offset, roi, debug, total_frames=False,
-    #                cluster_kind="DBSCAN", fit_kind="circle",
-    #                block_shape=(256, 256),
-    #                save_binary_masks=False,
-    #                THRESHOLD_METHOD="kapur", THRESHOLD_ONLY=False,
-    #                FILL_CLUSTERS=False)
+    # select from which frame to start processing
+    start = int(args.start[0])
+
+    if int(args.nframes[0]) == -1:
+        N = len(frames)
+    else:
+        N = int(args.nframes[0])
+    total_frames = len(frames)
+
+    frames = frames[start:start+N]
+    averages = averages[start:start+N]
+
+    # ----
+    # full call for the detection function is
+
+    # detector(frame, average, roi, output, cluster_pars=["dbscan", 10, 10],
+    #              threshold_pars=["otsu"],
+    #              total_frames=False, fit_kind="circle",
+    #              block_shape=(256, 256), nthreads=1, debug=False)
+    # ----
 
     # debug - or serial case
     if args.debug:
-        print("  + Detection in debug/serial mode")
+        print("\n  + Detection in debug/serial mode")
         # ---- detect in serial mode ----
         frame_counter = 0
         for frame, average in zip(frames, averages):
-            detector(frame, average, temp_path,
-                     EPS, MIN_SAMPLES,
-                     WIN_SIZE, OFFSET, roi, True,
-                     len(frames), CLUSTER_KIND, FIT_KIND,
-                     BLOCK_SHAPE, SAVE_BINARY_MASK,
-                     THRESHOLD_METHOD, THRESHOLD_ONLY, FILL_CLUSTERS)
-            # break the loop if reach the plotting limit
-            if frame_counter+1 >= int(args.nframes[0]):
-                print("-- Breaking the loop at {}.".format(frame_counter+1))
-                break
+            detector(frame, average, roi, temp_path,
+                     cluster_pars, threshold_pars,
+                     total_frames, FIT_KIND,
+                     BLOCK_SHAPE, NTHREADS, debug=True)
             frame_counter += 1
 
     else:
-        print("  + Detection in pararell mode")
-        # ---- detect in pararell ---
-        fargs = zip(frames, averages, repeat(temp_path), repeat(EPS),
-                    repeat(MIN_SAMPLES), repeat(WIN_SIZE), repeat(OFFSET),
-                    repeat(roi), repeat(False), repeat(len(frames)),
-                    repeat(CLUSTER_KIND), repeat(FIT_KIND),
-                    repeat(BLOCK_SHAPE), repeat(SAVE_BINARY_MASK),
-                    repeat(THRESHOLD_METHOD),
-                    repeat(THRESHOLD_ONLY), repeat(FILL_CLUSTERS))
+        print("\n  + Detection in pararell mode")
+
+        # plot in parallel mode
+        if args.force_plot:
+            debug = True
+        else:
+            debug = False
+
+        # call
+        fargs = zip(frames, averages,
+                    repeat(roi), repeat(temp_path),
+                    repeat(cluster_pars), repeat(threshold_pars),
+                    repeat(total_frames), repeat(FIT_KIND),
+                    repeat(BLOCK_SHAPE), repeat(NTHREADS), repeat(debug))
         with ProcessPool(max_workers=int(args.nproc[0]), max_tasks=99) as pool:
             for a in fargs:
                 future = pool.schedule(detector, args=a,
                                        timeout=TIMEOUT)
                 future.add_done_callback(task_done)
 
-    if not THRESHOLD_ONLY:
-        # merge all cdv files
-        print("  + Merging outputs")
-        dfs = []
-        for fname in natsorted(glob(temp_path + "/*.csv")):
-            dfs.append(pd.read_csv(fname))
-        df = pd.concat(dfs)
-        df.to_csv(args.output[0], index=False, chunksize=2**16)
+    # merge all cds files
+    print("\n  + Merging outputs")
+    dfs = []
+    for fname in natsorted(glob(temp_path + "/*.csv")):
+        dfs.append(pd.read_csv(fname))
+    df = pd.concat(dfs)
+    df.to_csv(args.output[0], index=False, chunksize=2**16)
 
-    if not args.debug:
+    if not (args.debug or args.force_plot):
         shutil.rmtree(temp_path)
-
-    # clean decompressed files
-    shutil.rmtree("decomp")
 
 
 if __name__ == "__main__":
@@ -1047,32 +937,27 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # input configuration file
-    parser.add_argument("--input", "-i",
+    parser.add_argument("--input", "-i", "--frames", "-frames",
                         nargs=1,
                         action="store",
                         dest="input",
                         required=True,
                         help="Input path with extracted frames.",)
-    # DIACAM files?
-    parser.add_argument("--diacam", "-diacam", "--DIACAM",
-                        action="store_true",
-                        dest="DIACAM",
-                        help="If parsed, assume DIACAM structure.",)
 
     parser.add_argument("--output", "-o",
                         nargs=1,
                         action="store",
                         dest="output",
-                        default=["diferential_detector.csv"],
+                        default=["wave_breaking_candidates.csv"],
                         required=False,
-                        help="Output file name.",)
+                        help="Output file name (csv).",)
 
-    parser.add_argument("--subtract-averages",
+    parser.add_argument("--subtract-averages", "--averages", "-averages",
                         nargs=1,
                         action="store",
                         dest="subtract_avg",
                         default=[False],
-                        required=False,
+                        required=True,
                         help="Subtract average images from each frame."
                              "Must be path-like.",)
 
@@ -1084,77 +969,30 @@ if __name__ == "__main__":
                         required=False,
                         help="Number of processes to use.",)
 
-    parser.add_argument("--cluster-method", "-cluster-method",
+    parser.add_argument("--nthreads", "-nthreads",
                         nargs=1,
+                        action="store",
+                        dest="nthreads",
+                        default=[4],
+                        required=False,
+                        help="Number of threads to use.",)
+
+    parser.add_argument("--cluster-method", "-cluster-method", "--cluster",
+                        nargs="*",
                         action="store",
                         dest="cluster_kind",
-                        default=["DBSCAN"],
+                        default=["DBSCAN", 10, 10],
                         required=False,
-                        help="Either DBSCAN or OPTICS. Default is DBSCAN.",)
+                        help="Either DBSCAN or OPTICS. Default is DBSCAN. "
+                             "Must also inform EPS and MIN_SAMPLES values.",)
 
-    parser.add_argument("--eps", "-eps",
-                        nargs=1,
+    parser.add_argument("--threshold-method", "-threshold-method", "-trx", "--trx", "--threshold",
+                        nargs="*",
                         action="store",
-                        dest="eps",
-                        default=[10],
+                        dest="threshold_method",
+                        default=["adaptative", 11, 10],
                         required=False,
-                        help="DBSCAN eps parameter (pixels)",)
-
-    parser.add_argument("--min-samples", "-min-samples",
-                        nargs=1,
-                        action="store",
-                        dest="min_samples",
-                        default=[5],
-                        required=False,
-                        help="DBSCAN min_samples parameter (pixels)",)
-
-    parser.add_argument("--use-threshold-otsu",
-                        nargs=1,
-                        action="store",
-                        dest="otsu",
-                        default=["False"],
-                        required=False,
-                        help="If parsed as True will use OTSU method.",)
-
-    parser.add_argument("--use-threshold-sauvola",
-                        nargs=1,
-                        action="store",
-                        dest="sauvola",
-                        default=["False"],
-                        required=False,
-                        help="If parsed as True will use Sauvola method.",)
-
-    parser.add_argument("--use-threshold-kapur",
-                        nargs=1,
-                        action="store",
-                        dest="kapur",
-                        default=["False"],
-                        required=False,
-                        help="If parsed as True will use Kapur method.",)
-
-    parser.add_argument("--use-threshold-minerr",
-                        nargs=1,
-                        action="store",
-                        dest="minerr",
-                        default=["False"],
-                        required=False,
-                        help="If parsed as True will use MinErr method.",)
-
-    parser.add_argument("--window-size", "-window-size",
-                        nargs=1,
-                        action="store",
-                        dest="window",
-                        default=[11],
-                        required=False,
-                        help="Window size for local_threshold. Must be Odd.",)
-
-    parser.add_argument("--offset", "-offset",
-                        nargs=1,
-                        action="store",
-                        dest="offset",
-                        default=[10],
-                        required=False,
-                        help="Offset for local_threshold.",)
+                        help="Thresholding method.",)
 
     parser.add_argument("--region-of-interest", "-roi", "--roi",
                         nargs="*",
@@ -1178,24 +1016,10 @@ if __name__ == "__main__":
                         nargs=2,
                         action="store",
                         dest="block_shape",
-                        default=[256, 256],
+                        default=[128, 128],
                         required=False,
                         help="Size of the block to divide the image into."
                              " Must be a power of two. If not, will be cast.",)
-
-    parser.add_argument("--save-binary-masks",
-                        nargs=1,
-                        action="store",
-                        default=["False"],
-                        dest="save_binary_mask",
-                        required=False,
-                        help="If parsed with an arguent, will save masks.",)
-
-    parser.add_argument("--fill-regions",
-                        action="store_true",
-                        dest="fill_regions",
-                        required=False,
-                        help="Fill the regions occupied by a cluster.",)
 
     parser.add_argument("--temporary-path", "-temporary-path",
                         nargs=1,
@@ -1211,69 +1035,116 @@ if __name__ == "__main__":
                         required=False,
                         help="If parsed, will run in debug mode.",)
 
-    parser.add_argument("--frames-to-plot", "-nframes", "--nframes",
+    parser.add_argument("--force-plot-in-parallel-mode",
+                        action="store_true",
+                        dest="force_plot",
+                        required=False,
+                        help="If parsed, will run in debug mode.",)
+
+    parser.add_argument("--frames-to-process", "-nframes", "--nframes",
                         nargs=1,
                         action="store",
                         dest="nframes",
-                        default=[200],
-                        help="How many frames to plot.",)
+                        default=[-1],
+                        help="How many frames to process. Default is all.",)
 
-    parser.add_argument("--threshold-only",
-                        action="store_true",
-                        dest="threshold_only",
-                        help="Only compute the threshold and binary masks.",)
+    parser.add_argument("--from-frame", "-start", "--start",
+                        nargs=1,
+                        action="store",
+                        dest="start",
+                        default=[0],
+                        help="In which frame to start processing. Default is 0.",)
 
     parser.add_argument("--timeout",
+                        nargs=1,
                         action="store",
                         dest="timeout",
-                        default=[120],
+                        default=[3600],
                         required=False,
-                        help="Kill a process if taking more than 120 secs",)
+                        help="Kill a process if taking more than 3600 secs",)
 
     args = parser.parse_args()
 
-    # Constants
+    # Constants and options
 
     # which geometry to fit to wave breaking event candidates
     FIT_KIND = args.fitting_kind[0]
 
-    # DBSCAN options
-    CLUSTER_KIND = args.cluster_kind[0]
-    EPS = float(args.eps[0])
-    MIN_SAMPLES = int(args.min_samples[0])
+    # TODO: Re-factor this code latter
 
     # deal with thresholding method
-    THRESHOLD_METHOD = "adaptative"
-    if args.otsu[0].lower() == "true":
-        THRESHOLD_METHOD = "otsu"
-    if args.sauvola[0].lower() == "true":
-        THRESHOLD_METHOD = "sauvola"
-    if args.kapur[0].lower() == "true":
-        THRESHOLD_METHOD = "kapur"
-    if args.minerr[0].lower() == "true":
-        THRESHOLD_METHOD = "minerr"
+    MTD = args.threshold_method[0]
+    if MTD.lower() == "otsu":
+        threshold_pars = ["otsu"]
 
-    print("\n -- Thresholding method is: {}\n".format(THRESHOLD_METHOD))
+    elif MTD.lower() == "entropy":
+        threshold_pars = ["entropy"]
 
-    # window and offset for local threshold
-    WIN_SIZE = int(args.window[0])
-    OFFSET = int(args.offset[0])
+    elif MTD.lower() == "adaptative":
+        if len(args.threshold_method) < 3:
+            raise ValueError("Must give window size and offset values.")
+        threshold_pars = ["adaptative", int(args.threshold_method[1]),
+                          int(args.threshold_method[2])]
 
+    elif MTD.lower() == "constant":
+        if len(args.threshold_method) < 2:
+            raise ValueError("Must give the constant value.")
+        threshold_pars = ["constant", int(args.threshold_method[1])]
+
+    elif MTD.lower() == "file":
+        if len(args.threshold_method) < 2:
+            raise ValueError("Must give the file path.")
+        threshold_pars = ["file", args.threshold_method[1]]
+
+    else:
+        raise ValueError("Threshold method is unknown.")
+
+    print("  - Thresholding method is: {}".format(MTD))
+    if args.threshold_method[1:]:
+        print("  - Thresholding parameters are: ", args.threshold_method[1:])
+
+    # deal with clustering method
+    CLUSTER_KIND = args.cluster_kind[0]
+    if CLUSTER_KIND.lower() == "dbscan":
+        if len(args.cluster_kind) < 3:
+            raise ValueError("Must give eps and min_samples values.")
+        eps = float(args.cluster_kind[1])
+        min_samples = int(args.cluster_kind[2])
+        cluster_pars = ["dbscan", eps, min_samples]
+
+    elif CLUSTER_KIND.lower() == "hdbscan":
+        if len(args.cluster_kind) < 2:
+            raise ValueError("Must give min_samples value.")
+        min_samples = int(args.cluster_kind[1])
+        cluster_pars = ["hdbscan", False, min_samples]
+
+    elif CLUSTER_KIND.lower() == "optics":
+        if len(args.cluster_kind) < 2:
+            raise ValueError("Must give min_samples value.")
+        eps = float(args.cluster_kind[1])
+        min_samples = int(args.cluster_kind[2])
+        cluster_pars = ["optics", eps, min_samples]
+
+    else:
+        raise NotImplementedError("Only DBSCAN/HDBSCAN/OPTICS are currently working.")
+
+    print("\n  - Clustering method is: {}".format(CLUSTER_KIND.lower()))
+    if args.cluster_kind[1:]:
+        print("  - Clustering parameters are: ", args.cluster_kind[1:])
+
+    # image blovk size to process the image in chunks
+    # this avois memory errors
     BLOCK_SHAPE = [int(args.block_shape[0]), int(args.block_shape[0])]
 
+    # maximum time allowed for each function call
     TIMEOUT = int(args.timeout[0])
 
-    # fill clusters if using local_threshold, this is slow!
-    FILL_CLUSTERS = args.fill_regions
+    # global number of threads
+    NTHREADS = int(args.nthreads[0])
 
-    # save binary masks if true
-    SAVE_BINARY_MASK = args.save_binary_mask[0]
-
-    # THRESHOLD ONLY
-    THRESHOLD_ONLY = args.threshold_only
-
-    # DIACAM file structure?
-    DIACAM = args.DIACAM
+    # This locks sklearn and makes sure it does not create more processes than
+    # what it"s being asked for.
+    parallel_backend("threading", n_jobs=NTHREADS)
 
     # call the main program
     main()

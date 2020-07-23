@@ -73,99 +73,68 @@ Use the following links to download the pre-defined datasets.
 
 If you wish to start creating a dataset from the scratch, first you need to obtain
 wave breaking candidates. For this task use the
-[naive wave breaking detector](src/naive_wave_breaking_detector.py). It will naively detect wave breaking using an adaptive thresholding approach. This script can also be used to generate binary masks that can be used by other algorithms.
+[naive wave breaking detector](src/naive_wave_breaking_detector.py). It will naively detect wave breaking using an adaptive thresholding approach.
 
 For help: ```python naive_wave_breaking_detector.py --help```
 
-**Example:**
+***Example:***
 
 ```bash
-python naive_wave_breaking_detector.py --debug --input "input/folder/" --output "output" --subtract-averages "average/folder" --eps 10 -min-samples 10 --window-size 21 --offset 10 --region-of-interest "ROI.csv" --temporary-path "tmp" --fit-method "ellipse" --nproc 4 --save-binary-masks --block-shape 1024 1024
+python naive_wave_breaking_detector.py --debug --input "input/folder/" --output "output" --subtract-averages "average/folder" --cluster "dbscan" 10 10 --threshold "adaptive" 11 10 --region-of-interest "file.csv" --temporary-path "tmp/" --fit-method "ellipse" --nproc 4
 ```
 
-**Options:**
+***Options:***
 
-- ```--debug``` Runs in debug mode and will save output plots.
+- ```--debug```: Runs in debug mode and will save output plots.
 
-- ```-i [--input]``` Input path with images
+- ```-i [--input]```: Input path with images
 
-- ```-o [--output]``` Output file name (see below for explanation).
+- ```-o [--output]```: Output file name (see below for explanation).
 
-- ```--subtract-averages``` Input path with pre-computed average images. Use [compute average image](src/compute_averaged_image.py) to generate valid files.
+- ```--subtract-averages```: Input path with pre-computed average images. Use [compute average image](src/compute_averaged_image.py) to generate valid files.
 
-- ```--eps``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
+- ```--cluster``` Clustering method. Only [DBSCAN](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) is fully functional. Must also inform `eps` and `n_min` parameters.
 
-- ```--min-samples``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
+- ```--threshold```: Thresholding method. Valid options are: `file`, `constant`, `entropy`, `otsu` and `adaptative`. Default is `adaptative` with window size 11 and offset 10.
 
-- ```--window-size``` : Mandatory parameter for ```local_threshold```. See [here](https://scikit-image.org/docs/stable/api/skimage.filters.html?highlight=threshold_local#skimage.filters.threshold_local) for details.
+- ```--region-of-interest```: File with region of interest. Use [Minimun Bounding Geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
 
-- ```--offset``` : Mandatory parameter for ```local_threshold```. See [here](https://scikit-image.org/docs/stable/api/skimage.filters.html?highlight=threshold_local#skimage.filters.threshold_local) for details.
-
-- ```--region-of-interest``` File with region of interest. Use [minimun bounding geometry](src/minimum_bounding_geometry.py) to generate a valid input file.
-
-- ```--temporary-path``` Path to write temporary files. Will save plots to this path if in debug mode.
+- ```--temporary-path```: Path to write temporary files. Will save plots to this path if in debug mode.
 
 - ```--fit-method``` Which geometry to fit to a detected cluster of bright pixels in the image. Valid options are *circle* or *ellipse*. If an ellipse cannot be fitted to the data, will fall back to fitting a circle.
 
-- ```--nproc``` Number of processors to use. If ```debug``` is parsed, defaults to one.
+- ```--nproc```: Number of processors to use. If ```debug``` is parsed, defaults to one.
 
-- ```--save-binary-masks``` If parsed, will save the binary masks for each frame. Default is False.
+- ```--block-shape 1024 1024```: Block shape to split the image into to avoid memory errors.
 
-- ```--fill-regions``` If parsed, will fill the regions defined by the clusters obtained by DBSCAN.
-Use this option to produce less granular binary masks. Default is False.
+- ```--frames-to-plot```: Number of frames to plot if in debug mode.
 
-- ```--block-shape 1024 1024``` Block shape to split the image into to avoid memory errors.
+- ```-timeout```: If in parallel mode, kill a processes if its taking longer than 120 seconds per default. This helps to avoid out-of-memory issues caused by DBSCAN.
 
-- ```--frames-to-plot``` Number of frames to plot if in debug mode.
+- ```--force-plot-in-parallel-mode```: Will plot outputs even if in parallel mode. Useful to debug even faster.
 
-- ```--use-threshold-minerr``` If passed as True, will use Min Error algorithm.
+***Output:***
 
-- ```--use-threshold-kapur```  If passed as True, will use Kapur algorithm.
-
-- ```--use-threshold-sauvola```  If passed as True, will use Sauvola algorithm.
-
-- ```--use-threshold-otsu```  If passed as True, will use OTSU algorithm.
-
-- ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. Defaults to ```DBSCAN```.
-
-- ```-timeout``` If in parallel mode, kill a processes if its taking longer than 120 seconds per default. This helps to avoid out-of-memory issues caused by DBSCAN.
-
-- ```--threshold-only``` If parsed, will compute thresholds and save masks only.
-
-- ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. Defaults to ```DBSCAN```.
-
-**Output:**
-
-For standard variable names, see [Standard Variable Names](#6-standard-variable-names)
-
-The output is this script is a comma-separated value (csv) file. It looks like this (note the sub-pixel precision):
+The output is this script is a comma-separated value (csv) file. See below for variable name explanation. The extra variable names included in the output file are:
 
 
-Explanation of extra variable names included in the output file:
-
-
-- ```pixels``` Number of pixels in each cluster.
-
-- ```cluster``` Cluster label from either `DBSCAN` or `OPTICS`.
-
-- ```block_i```  Block index in the `i`-direction.
-
-- ```block_j``` : Block index in the `j`-direction.
-
-- ```block_i_left``` : Block start in the `i`-direction (image referential).
-
-- ```block_i_right``` : Block end  in  the `i`-direction (image referential).
-
-- ```block_j_top``` : Block end  in  the `j`-direction (image referential).
-
-- ```block_j_bottom``` Block start the `j`-direction (image referential).
+| Variable             | Description                                           |
+|----------------------|-------------------------------------------------------|
+| ```pixels```         |  Number of pixels in each cluster                     |
+|  ```cluster```       |  Cluster label from either `DBSCAN` or `OPTICS`       |
+| ```block_i```        |   Block index in the `i`-direction                    |
+| ```block_j```        |  Block index in the `j`-direction                     |
+| ```block_i_left```   |  Block start in the `i`-direction (image referential) |
+| ```block_i_right```  |  Block end  in  the `i`-direction (image referential) |
+| ```block_j_top```    |  Block end  in  the `j`-direction (image referential) |
+| ```block_j_bottom``` |  Block start the `j`-direction (image referential)    |
 
 
 Graphically, the results of this script looks like this:
 
 ![](docs/naive_detector.gif)
 
-### 1.2.2. Sampling wave breaking candidates for training
+#### 1.2.2. Sampling wave breaking candidates for training
 
 Once you have some wave breaking candidates, use `prepare_data_for_classifer.py`
 to extract random samples:
@@ -173,7 +142,7 @@ to extract random samples:
 **Example:**
 
 ```bash
-python prepare_data_for_classifer.py -i "Wave_Breaking_candidates.csv" --frames "path/to/frames" -o "path/to/output" -N 100 -size 256 256 --region-of-interest "Region_of_Interest.csv"
+python prepare_data_for_classifer.py -i "wave_breaking_candidates.csv" --frames "path/to/frames" -o "path/to/output" -N 100 -size 256 256 --region-of-interest "region_of_interest.csv"
 ```
 
 **Options:**
@@ -191,16 +160,13 @@ other feature extraction program.
 
 - `--size [-size]`  Window size and output image size.
 
-Optional:
-- `--surfaces [-surfaces]` Surfaces file (netCDF). Will extract the matching surface file.
-
 The `output` folder has the following structure:
 
 ```
-├───img
-|───plt
-|───labels.csv
-└---srf
+output
+  ├───img
+  |───plt
+  |───labels.csv
 ```
 
 - `img` Contains the image data that is used as input data for the neural network.
@@ -209,12 +175,10 @@ The `output` folder has the following structure:
 
 - `labels.csv` This file has the same structure as the results from [naive wave breaking detector](src/naive_wave_breaking_detector.py) but with the addition of a column
 
-- `class` with the user has to manually fill assigning the correct labels by looking at the plots.
-
-- `srf` If `--surfaces` is used, will save the extract surfaces in this folder.
+- `class` the user has to manually fill assigning the correct labels by looking at the plots.
 
 
-### 1.2.3. Merging Datasets
+#### 1.2.3. Merging Datasets
 
 To merge multiple datasets created with `prepare_data_for_classifer.py` you can use
 'merge_data_for_classifier.py'.
@@ -257,7 +221,7 @@ The data needs to be in a folder which has sub-folders "0" and "1"
 
 For example:
 ```
-└───Data
+train
     ├───0
     ├───1
 ```
@@ -273,12 +237,12 @@ transfered learning does not work well.
 **Example**
 
 ```bash
-python train_wave_breaking_classifier_v2.py --data "path/to/data/" --backbone "VGG16" --model "vgg_test" --logdir "path/to/logs" --random-state 11 --validation-size 0.2 --learning-rate 0.00001 --epochs 200 --batch-size 200 --dropout 0.5 --input-size 256 256
+python train_wave_breaking_classifier_v2.py --data "train/" --backbone "VGG16" --model "vgg_test" --logdir "logs/" --random-state 11 --validation-size 0.2 --learning-rate 0.00001 --epochs 200 --batch-size 200 --dropout 0.5 --input-size 256 256
 ```
 
 **Arguments:**
 
-- `--data` Input train data path created with `merge_data_for_classifier.py` or manually.
+- `--data` Input train data path.
 
 - `--model ` Model name.
 
@@ -313,10 +277,10 @@ Please use the links below to download pre-trained models:
 - [**MobileNet**](https://drive.google.com/open?id=1N0N03QDevACbOAi0Vq9tAMShYBX6s8EA) | [**Training History**](https://drive.google.com/open?id=194R0zOyNvh7z5AZqRnxHS34_vEQ_r6un)
 - [**EfficientNet**]()
 
+
 ## 3. Evaluating Model Performance
 
 To evaluate a pre-trained model on test data, use the [test wave breaking classifier](src/test_wave_breaking_classifier.py) script.
-
 
 **Example:**
 
@@ -383,16 +347,44 @@ The results look like this:
 
 ## 4. Using a Pre-trained Neural Network
 
-Use the results from the [naive wave breaking detector](src/naive_wave_breaking_detector.py) and a pre-trained neural network
-to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can
-be much faster on ```GPU```.
+### 4.1 Using new data
 
-For help: ```python predict_active_wave_breaking_v2.py --help```
+Create a dataset either manually or with the provided tools. The data structure is as follows:
+
+```
+pred
+    ├───images
+        ├───img_00001.png
+        ├───img_00002.png
+        ├───...
+        ├───img_0000X.png
+```
+
+```bash
+python predict.py --data "pred/" --model "VGG16.h5" --threshold 0.5 --output "results.csv"
+```
+
+**Arguments:**
+
+- `--data` Input test data.
+
+- `--model ` Pre-trained model.
+
+- `--threshold` Threshold for binary classification. Default is 0.5
+
+- `--output` A csv file with the classification results.
+
+### 4.2. Using the results from the naïve detector
+
+Use the results from the [naive wave breaking detector](src/naive_wave_breaking_detector.py) and a pre-trained neural network
+to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can be much faster on ```GPU```.
+
+For help: ```python predict_from_naive_candidates.py --help```
 
 **Example**
 
 ```bash
-python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "path/to/roi.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
+python predict_active_wave_breaking_v2.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "region_of_interest.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
 ```
 
 **Arguments**
@@ -466,51 +458,32 @@ The table below summarizes the results presented in the paper. Results are sorte
 
 ## 6. Standard Variable Names
 
-The following variables are standard and all scripts that output these quantities should use these names. If a given script has extra output variables, please make sure to document what each of these variables are.
+The following variables are standard and all scripts that output these quantities should use these names.
 
-`x`: x-coordinate in metric coordinates.
-
-`y`: y-coordinate in metric coordinates.
-
-`z`: z-coordinate in metric coordinates.
-
-`time`: date and time. Use a format that [pandas.to_datetime()](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_datetime.html) can understand.
-
-`frame`: Sequential number.
-
-`i`: pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).
-
-`j`: pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).
-
-`ic`: center of a circle or ellipse in pixel coordinates.
-
-`jc`: center of a circle or ellipse in pixel coordinates.
-
-`xc`: center of a circle or ellipse in metric coordinates.
-
-`yc`: center of a circle or ellipse in metric coordinates.
-
-`ir`: radius in the i-direction.
-
-`jr`: radius in the j-direction.
-
-`xr`: radius in the x-direction?
-
-`yr`: radius in the y-direction?
-
-`theta_ij`: Angle of rotation of an ellipse with respect to the x-axis counter-clockwise.
-
-`theta_xy`: Angle of rotation of an ellipse with respect to the x-axis counter-clockwise.
-
-`wave_breaking_event`: unique wave breaking event id.
-
-`vx`: Velocity in the x-direction in m/s.
-
-`vy`: Velocity in the y-direction in m/s.
-
-`vi`: Velocity in the x-direction in pixels/frame.
-
-`vj`: Velocity in the y-direction in pixels/frame.
+| Variable              | Description                                                                                                                                                  |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `x`                   |  x-coordinate in metric coordinates.                                                                                                                         |
+| `y`                   |  y-coordinate in metric coordinates.                                                                                                                         |
+| `z`                   |  z-coordinate in metric coordinates.                                                                                                                         |
+| `time`                |  date and time. Use a format that [pandas.to_datetime()](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_datetime.html) can understand. |
+| `frame`               |  Sequential number.                                                                                                                                          |
+| `i`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
+| `j`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
+| `ic`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
+| `jc`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
+| `xc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
+| `yc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
+| `ir`                  |  radius in the i-direction.                                                                                                                                  |
+| `jr`                  |  radius in the j-direction.                                                                                                                                  |
+| `xr`                  |  radius in the x-direction?                                                                                                                                  |
+| `yr`                  |  radius in the y-direction?                                                                                                                                  |
+| `theta_ij`            |  Angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
+| `theta_xy`            |  Angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
+| `wave_breaking_event` |  unique wave breaking event id.                                                                                                                              |
+| `vx`                  |  Velocity in the x-direction in m/s.                                                                                                                         |
+| `vy`                  |  Velocity in the y-direction in m/s.                                                                                                                         |
+| `vi`                  |  Velocity in the x-direction in pixels/frame.                                                                                                                |
+| `vj`                  |  Velocity in the y-direction in pixels/frame.                                                                                                                |                                 |
 
 ## Disclaimer
 
