@@ -6,24 +6,25 @@ This repository contains code and data to reproduce the results of the paper **D
 
 ## Contents
 
-- [Deep Neural Networks for Active Wave Breaking Classification](#deep-neural-networks-for-active-wave-breaking-classification)
-  * [Contents](#contents)
-  * [1. Dependencies](#1-dependencies)
-  * [2. Data](#2-data)
-    + [2.1. Manual Creation](#21-manual-creation)
-    + [2.2. Production Ready](#22-production-ready)
-  * [3. Training](#3-training)
-    + [Pre-trained Models](#pre-trained-models)
-  * [4. Evaluating Model Performance](#4-evaluating-model-performance)
-  * [5. Using a Pre-trained Neural Network](#5-using-a-pre-trained-neural-network)
-    + [5.1 Predicting on New Data](#51-predicting-on-new-data)
-    + [5.2. Predicting from the Results of the Naïve Detector](#52-predicting-from-the-results-of-the-na-ve-detector)
-    + [5.3 Clustering Wave Breaking Events](#53-clustering-wave-breaking-events)
-    + [5.4. Plot Wave Breaking Detection Results](#54-plot-wave-breaking-detection-results)
-  * [6. Wave Breaking Statistics](#6-wave-breaking-statistics)
-  * [7. Gallery](#7-gallery)
-  * [8. Standard Variable Names](#8-standard-variable-names)
-  * [Disclaimer](#disclaimer)
+[Deep Neural Networks for Active Wave Breaking Classification](#deep-neural-networks-for-active-wave-breaking-classification)
+ * [1. Dependencies](#1-dependencies)
+ * [2. Data](#2-data)
+   + [2.1. Manual Creation](#21-manual-creation)
+   + [2.2. Production Ready](#22-production-ready)
+ * [3. Training](#3-training)
+   + [Pre-trained Models](#pre-trained-models)
+ * [4. Model Performance](#4-model-performance)
+   + [4.1. Evaluating](#41-evaluating)
+   + [4.2. Results](#42-results)
+ * [5. Using a Pre-trained Neural Network](#5-using-a-pre-trained-neural-network)
+   + [5.1 Predicting on New Data](#51-predicting-on-new-data)
+   + [5.2. Predicting from the Results of the Naïve Detector](#52-predicting-from-the-results-of-the-na-ve-detector)
+   + [5.3 Clustering Wave Breaking Events](#53-clustering-wave-breaking-events)
+   + [5.4. Plot Wave Breaking Detection Results](#54-plot-wave-breaking-detection-results)
+ * [6. Wave Breaking Statistics](#6-wave-breaking-statistics)
+ * [7. Gallery](#7-gallery)
+ * [8. Standard Variable Names](#8-standard-variable-names)
+ * [Disclaimer](#disclaimer)
 
 ## 1. Dependencies
 
@@ -153,7 +154,9 @@ Please use the links below to download pre-trained models:
 **EfficientNet** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Lb1bYKfIBZXGV4X4tzSXuj-abIvFiJoE/view?usp=sharing) | - |
 
 
-## 4. Evaluating Model Performance
+## 4. Model Performance
+
+### 4.1. Evaluating
 
 To evaluate a pre-trained model on test data, use the [```test```](src/test.py) script.
 
@@ -218,6 +221,8 @@ python plot_history_and_confusion_matrix.py --history "path/to/history.csv" --re
 
 The results look like this:
 ![](docs/hist_cm.png)
+
+### 4.2. Results
 
 The table below summarizes the results presented in the paper. Results are sorted by ```AUC```.
 
