@@ -1,4 +1,4 @@
-[![](badges/overleaf_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw) **|** [![](badges/arxiv_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw)
+[![](badges/overleaf_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw) [![](badges/arxiv_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw)
 
 # Deep Neural Networks for Active Wave Breaking Classification
 
@@ -6,24 +6,24 @@ This repository contains code and data to reproduce the results of the paper **D
 
 ## Contents
 
-
 - [Deep Neural Networks for Active Wave Breaking Classification](#deep-neural-networks-for-active-wave-breaking-classification)
-  * [Dependencies](#dependencies)
-  * [1. Data](#1-data)
-    + [1.1. Published data](#11-published-data)
-    + [1.2. Creating a dataset from the scratch](#12-creating-a-dataset-from-the-scratch)
-      - [1.2.1. Extracting wave breaking candidates](#121-extracting-wave-breaking-candidates)
-      - [1.2.2. Sampling wave breaking candidates for training](#122-sampling-wave-breaking-candidates-for-training)
-      - [1.2.3. Merging Datasets](#123-merging-datasets)
-  * [2. Models](#2-models)
-      - [2.1. Training the Neural Network](#21-training-the-neural-network)
-      - [2.2. Pre-trained Models](#22-pre-trained-models)
-  * [3. Evaluating Model Performance](#3-evaluating-model-performance)
-  * [4. Using a Pre-trained Neural Network](#4-using-a-pre-trained-neural-network)
-  * [5. Results](#5-results)
-  * [6. Appendix I (Standard Variable Names)](#6-standard-variable-names)
+  * [Contents](#contents)
+  * [1. Dependencies](#1-dependencies)
+  * [2. Data](#2-data)
+    + [2.1. Manual Creation](#21-manual-creation)
+    + [2.2. Production Ready](#22-production-ready)
+  * [3. Training](#3-training)
+    + [Pre-trained Models](#pre-trained-models)
+  * [4. Evaluating Model Performance](#4-evaluating-model-performance)
+  * [5. Using a Pre-trained Neural Network](#5-using-a-pre-trained-neural-network)
+    + [5.1 Predicting on New Data](#51-predicting-on-new-data)
+    + [5.2. Predicting from the Results of the Naïve Detector](#52-predicting-from-the-results-of-the-na-ve-detector)
+    + [5.3 Clustering Wave Breaking Events](#53-clustering-wave-breaking-events)
+    + [5.4. Plot Wave Breaking Detection Results](#54-plot-wave-breaking-detection-results)
+  * [6. Wave Breaking Statistics](#6-wave-breaking-statistics)
+  * [7. Gallery](#7-gallery)
+  * [8. Standard Variable Names](#8-standard-variable-names)
   * [Disclaimer](#disclaimer)
-
 
 ## 1. Dependencies
 
@@ -69,7 +69,7 @@ conda install ipython
 
 - Refer to [Manual Data Preparation](util/README.md).
 
-### 2.2. Production ready
+### 2.2. Production Ready
 
 
 | Model | Link  | Alternative link  |
@@ -142,7 +142,7 @@ The neural network looks something like this:
 
 Please use the links below to download pre-trained models:
 
-### **20K dataset**
+**20K dataset**
 
 | Model | Link  | Alternative link  |
 |-------|-------|-------------------|
@@ -155,7 +155,7 @@ Please use the links below to download pre-trained models:
 
 ## 4. Evaluating Model Performance
 
-To evaluate a pre-trained model on test data, use the [test wave breaking classifier](src/test_wave_breaking_classifier.py) script.
+To evaluate a pre-trained model on test data, use the [```test```](src/test.py) script.
 
 **Example:**
 
@@ -219,143 +219,6 @@ python plot_history_and_confusion_matrix.py --history "path/to/history.csv" --re
 The results look like this:
 ![](docs/hist_cm.png)
 
-
-## 5. Using a Pre-trained Neural Network
-
-### 5.1 Predicting on new data
-
-Create a dataset either manually or with the provided tools. The data structure is as follows:
-
-```
-pred
-    ├───images
-        ├───img_00001.png
-        ├───img_00002.png
-        ├───...
-        ├───img_0000X.png
-```
-
-```bash
-python predict.py --data "pred/" --model "VGG16.h5" --threshold 0.5 --output "results.csv"
-```
-
-**Options:**
-
-- `--data` Input test data.
-
-- `--model ` Pre-trained model.
-
-- `--threshold` Threshold for binary classification. Default is 0.5
-
-- `--output` A csv file with the classification results.
-
-### 5.2. Using the results from the naïve detector
-
-Use the results from the [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) and a pre-trained neural network
-to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can be much faster on ```GPU```.
-
-**Example:**
-
-```bash
-python predict_from_naive_candidates.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "region_of_interest.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
-```
-
-**Options:**
-
-- ```--debug``` Runs in debug mode and will save output plots.
-
-- ```-i [--input]``` Input data obtained from ```naive_wave_breaking_detector```.
-
-- ```-m [--model]``` Pre-trained Tensorflow model.
-
-- ```-o [--output]``` Output file name (see below for explanation).
-
-- ```-frames [--frames]``` Input path with images.
-
-- ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](util/minimum_bounding_geometry.py) to generate a valid input file.
-
-- ```-temporary-path``` Output path for debug plots.
-
-- ```--frames-to-plot``` Number of frames to plot.
-
-- ```--threshold``` Threshold for activation in the last (sigmoid) layer of the model. Default is `0.5`.
-
-***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, and `frame`.
-
-
-**Output:**
-
-The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) but adding a extra column with the results of the classification.
-
-Graphically, the results of this script looks like this:
-
-![](docs/robust_detector.gif)
-
-# 5.3 Clustering outputs
-
-To cluster wave breaking events in time and space use [```cluster.py```](util/cluster.py). This script can use the results of ```naive_wave_breaking_detector``` directly but this is not recommended. It is recommended that you narrow down the candidates for clustering using [```predict_from_naive_candidates.py```](util/predict_from_naive_candidates.py) first.
-
-**Example:**
-
-```bash
-python cluster.py -i "active_wave_breaking_events.csv" -o "clusters.csv" --cluster method "DBSCAN" --eps 10 -min-samples 10
-```
-
-**Options:**
-
-- ```-i [--input]``` Input path with images
-
-- ```-o [--output]``` Output file name (see below for explanation).
-
-- ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. ```DBSCAN``` is recommended.
-
-- ```--eps``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
-
-- ```--min-samples``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
-
-- ```--njobs``` Number of jobs to use.
-
-- ```--chunk-size``` Maximum number of rows to process at a time. Default is 1000. Use lower values to avoid out-of-memory errors.
-
-**Note**: The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, `frame`.
-
-**Output:**
-
-The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) with the addition of a column named ```wave_breaking_event```.
-
-
-## Plot Wave Breaking Detection Results
-
-Plot the results of the wave breaking detection algorithms. Can handle outputs of any algorithm, as long as the input data is correct. Ideally the results from ```cluster_wave_breaking_events.py``` are used as input.
-
-For help: ```python plot_wave_breaking_detection_results.py --help```
-
-### Example:
-
-```bash
-python plot_wave_breaking_detection_results.py --input "clustered_events.csv" --output "path/to/output/" --frames "path/to/frames/" --region-of-interest "path/to/roi.csv" --frames-to-plot 1000
-```
-
-### Options:
-
-- ```-i [--input]``` Input csv file.
-
-- ```-o [--output]``` Output path.
-
-- ```-frames-path``` Path with frames.
-
-- ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](../../util/minimum_bounding_geometry.py) to generate a valid input file.
-
-- ```--frames-to-plot``` Number of frames to plot.
-
-***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, `frame`, `wave_breaking_event`.
-
-The results of `cluster_wave_breaking_events.py` looks like this:
-
-![](docs/clusters.gif)
-
-## 6. Results
-
 The table below summarizes the results presented in the paper. Results are sorted by ```AUC```.
 
 **Train**
@@ -392,9 +255,144 @@ The table below summarizes the results presented in the paper. Results are sorte
 | MobileNet         | 0.875 | 30  | 5  | 1020 | 145 | 0.857 | 0.171 | 0.768 |
 
 
-## 8. Wave Breaking Statistics
+## 5. Using a Pre-trained Neural Network
+
+### 5.1 Predicting on New Data
+
+Create a dataset either manually or with the provided tools. The data structure is as follows then use the [```predict```](src/test.py) script.
+
+```
+pred
+    ├───images
+        ├───img_00001.png
+        ├───img_00002.png
+        ├───...
+        ├───img_0000X.png
+```
+
+**Example:**
+
+```bash
+python predict.py --data "pred/" --model "VGG16.h5" --threshold 0.5 --output "results.csv"
+```
+
+**Options:**
+
+- `--data` Input test data.
+
+- `--model ` Pre-trained model.
+
+- `--threshold` Threshold for binary classification. Default is 0.5
+
+- `--output` A csv file with the classification results.
+
+### 5.2. Predicting from the Results of the Naïve Detector
+
+Use the results from the [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) and a pre-trained neural network
+to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can be much faster on ```GPU```.
+
+**Example:**
+
+```bash
+python predict_from_naive_candidates.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "region_of_interest.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
+```
+
+**Options:**
+
+- ```--debug``` Runs in debug mode and will save output plots.
+
+- ```-i [--input]``` Input data obtained from ```naive_wave_breaking_detector```.
+
+- ```-m [--model]``` Pre-trained Tensorflow model.
+
+- ```-o [--output]``` Output file name (see below for explanation).
+
+- ```-frames [--frames]``` Input path with images.
+
+- ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](util/minimum_bounding_geometry.py) to generate a valid input file.
+
+- ```-temporary-path``` Output path for debug plots.
+
+- ```--frames-to-plot``` Number of frames to plot.
+
+- ```--threshold``` Threshold for activation in the last (sigmoid) layer of the model. Default is `0.5`.
+
+***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, and `frame`.
+
+The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) but adding a extra column with the results of the classification.
+
+### 5.3 Clustering Wave Breaking Events
+
+To cluster wave breaking events in time and space use [```cluster.py```](util/cluster.py). This script can use the results of ```naive_wave_breaking_detector``` directly but this is not recommended. It is recommended that you narrow down the candidates for clustering using [```predict_from_naive_candidates.py```](util/predict_from_naive_candidates.py) first.
+
+**Example:**
+
+```bash
+python cluster.py -i "active_wave_breaking_events.csv" -o "clusters.csv" --cluster method "DBSCAN" --eps 10 -min-samples 10
+```
+
+**Options:**
+
+- ```-i [--input]``` Input path with images
+
+- ```-o [--output]``` Output file name (see below for explanation).
+
+- ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. ```DBSCAN``` is recommended.
+
+- ```--eps``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
+
+- ```--min-samples``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
+
+- ```--njobs``` Number of jobs to use.
+
+- ```--chunk-size``` Maximum number of rows to process at a time. Default is 1000. Use lower values to avoid out-of-memory errors.
+
+**Note**: The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, `frame`.
+
+The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) with the addition of a column named ```wave_breaking_event```.
+
+### 5.4. Plot Wave Breaking Detection Results
+
+Plot the results of the wave breaking detection algorithms. Can handle outputs of any algorithm, as long as the input data is correct. Ideally the results from [```cluster.py```](src/cluster.py) are used as input.
+
+**Example:**
+
+```bash
+python plot_wave_breaking_detection_results.py --input "clustered_events.csv" --output "path/to/output/" --frames "path/to/frames/" --region-of-interest "path/to/roi.csv" --frames-to-plot 1000
+```
+
+**Options:**
+
+- ```-i [--input]``` Input csv file.
+
+- ```-o [--output]``` Output path.
+
+- ```-frames-path``` Path with frames.
+
+- ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](../../util/minimum_bounding_geometry.py) to generate a valid input file.
+
+- ```--frames-to-plot``` Number of frames to plot.
+
+***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, `frame`, `wave_breaking_event`.
+
+
+## 6. Wave Breaking Statistics
 
 Please refer to [```Wave Breaking Statistics```](stats/README.md).
+
+## 7. Gallery
+
+**La Jument:**
+
+![](docs/jument_naive_plus_robust.gif)
+
+**Black Sea:**
+
+![](docs/black_sea_naive_plus_robust.gif)
+
+**Aqua Alta:**
+
+![](docs/aquaalta_naive_plus_robust.gif)
 
 ## 8. Standard Variable Names
 

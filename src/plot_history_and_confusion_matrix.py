@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     # compute the confusion matrix
     cm = confusion_matrix(res["true"], res["prediction"],
-                          normalize="pred", labels=[1, 0],)
+                          normalize="true", labels=[1, 0],)
     df_cm = pd.DataFrame(
         cm, index=[i for i in ["Active Wave Breaking", "Otherwise"]],
         columns=[i for i in ["Active Wave Breaking", "Otherwise"]])
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     ax1.axvline(overfit, lw=3, color="k", ls="--", label="Overfitting")
     ax1.set_xlabel("Epoch $[-]$")
     ax1.set_ylabel("Loss value $[-]$")
-    lg = ax1.legend(loc=2, fontsize=12)
+    lg = ax1.legend(loc=1, fontsize=12)
     lg.get_frame().set_color("w")
     ax1.grid(color="w", ls="-", lw=2)
     ax1.set_ylim(top=1)
@@ -156,8 +156,8 @@ if __name__ == '__main__':
     k = 0
     letters = ["a)", "b)", "c)"]
     for ax in [ax1, ax2, ax3]:
-        ax.text(0.95, 0.95, letters[k],
-                va="top", zorder=100, transform=ax.transAxes, ha="right",
+        ax.text(0.05, 0.95, letters[k],
+                va="top", zorder=100, transform=ax.transAxes, ha="left",
                 bbox=dict(
                     boxstyle="square", ec="none", fc="1", lw=1, alpha=0.7))
         k += 1
