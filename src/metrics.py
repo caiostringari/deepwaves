@@ -11,6 +11,13 @@ import pandas as pd
 
 import pathlib
 
+try:
+    import efficientnet.tfkeras as efn
+except Exception:
+    pass
+    print(ImportError("\nWarning: run pip install -U --pre efficientnet"))
+
+
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 if __name__ == '__main__':
@@ -87,7 +94,7 @@ if __name__ == '__main__':
         raise IOError("Check your data!")
 
     # --- pre-trained model ---
-    # model = tf.keras.models.load_model(args.model[0])
+    model = tf.keras.models.load_model(args.model[0])
     history = pd.read_csv(args.history[0])
 
     # train data
@@ -99,8 +106,6 @@ if __name__ == '__main__':
     precision = history.iloc[epoch]["Precision"]
     recall = history.iloc[epoch]["Recall"]
     auc = history.iloc[epoch]["AUC"]
-
-    # TODO: Need to convert to %.
 
     X = [accuracy, tp, fp, tn, fn, precision, recall, auc]
     cols = ["Binary_Accuracy", "True_Positives", "False_Positives",
@@ -126,38 +131,37 @@ if __name__ == '__main__':
     df_val.index = ["Validation"]
     print(df_val)
 
-    # # evaluate the model on test data
-    df_test = df_val
-    # inp_shape = model.input_shape
-    # img_height = inp_shape[1]  # image height for all images
-    # img_width = inp_shape[2]  # image width for all images
-    #
-    # datagen = ImageDataGenerator(rescale=1./255.)
-    #
-    # print("\n    Fitting the teset data generator:\n")
-    # data_gen_test = datagen.flow_from_directory(
-    #     directory=str(test_dir), batch_size=BATCH_SIZE, shuffle=False,
-    #     target_size=(img_height, img_width), classes=["0", "1"],
-    #     class_mode="binary")
-    #
-    # result = model.evaluate(data_gen_test)
-    # metrics = dict(zip(model.metrics_names, result))
-    #
-    # # validation data
-    # accuracy = metrics["Binary_Accuracy"]
-    # tp = metrics["True_Positives"]
-    # fp = metrics["False_Positives"]
-    # tn = metrics["True_Negatives"]
-    # fn = metrics["False_Negatives"]
-    # precision = metrics["Precision"]
-    # recall = metrics["Recall"]
-    # auc = metrics["AUC"]
-    #
-    # X = [accuracy, tp, fp, tn, fn, precision, recall, auc]
-    # cols = ["Binary_Accuracy", "True_Positives", "False_Positives",
-    #         "True_Negatives",  "False_Negatives", "Precision", "Recall", "AUC"]
-    # df_test = pd.DataFrame([X], columns=cols)
-    # df_test.index = ["Test"]
+    # evaluate the model on test data
+    inp_shape = model.input_shape
+    img_height = inp_shape[1]  # image height for all images
+    img_width = inp_shape[2]  # image width for all images
+
+    datagen = ImageDataGenerator(rescale=1./255.)
+
+    print("\n    Fitting the teset data generator:\n")
+    data_gen_test = datagen.flow_from_directory(
+        directory=str(test_dir), batch_size=BATCH_SIZE, shuffle=False,
+        target_size=(img_height, img_width), classes=["0", "1"],
+        class_mode="binary")
+
+    result = model.evaluate(data_gen_test)
+    metrics = dict(zip(model.metrics_names, result))
+
+    # validation data
+    accuracy = metrics["Binary_Accuracy"]
+    tp = metrics["True_Positives"]
+    fp = metrics["False_Positives"]
+    tn = metrics["True_Negatives"]
+    fn = metrics["False_Negatives"]
+    precision = metrics["Precision"]
+    recall = metrics["Recall"]
+    auc = metrics["AUC"]
+
+    X = [accuracy, tp, fp, tn, fn, precision, recall, auc]
+    cols = ["Binary_Accuracy", "True_Positives", "False_Positives",
+            "True_Negatives",  "False_Negatives", "Precision", "Recall", "AUC"]
+    df_test = pd.DataFrame([X], columns=cols)
+    df_test.index = ["Test"]
 
     # merge results
     df = pd.concat([df_train, df_val, df_test])
