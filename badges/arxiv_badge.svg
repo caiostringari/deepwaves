@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="28.574999mm"
+   height="5.2916665mm"
+   viewBox="0 0 28.574999 5.2916665"
+   version="1.1"
+   id="svg4562"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="arxiv_badge.svg"
+   inkscape:export-filename="C:\Users\cstringa\Documents\dime\data\google_drive_badge.png"
+   inkscape:export-xdpi="95.99971"
+   inkscape:export-ydpi="95.99971">
+  <defs
+     id="defs4556">
+    <clipPath
+       id="a">
+      <rect
+         style="fill:#ffffff"
+         y="0"
+         x="0"
+         id="rect10"
+         rx="3"
+         height="20"
+         width="108" />
+    </clipPath>
+    <linearGradient
+       gradientUnits="userSpaceOnUse"
+       y1="0"
+       x1="0"
+       gradientTransform="scale(2.32379,0.43033148)"
+       y2="46.4758"
+       x2="0"
+       id="b">
+      <stop
+         id="stop5"
+         stop-opacity=".1"
+         stop-color="#bbb"
+         offset="0" />
+      <stop
+         id="stop7"
+         stop-opacity=".1"
+         offset="1" />
+    </linearGradient>
+    <mask
+       id="mask"
+       x="24.94"
+       y="24.88"
+       width="436.94"
+       height="228.83"
+       maskUnits="userSpaceOnUse">
+      <g
+         id="b-6">
+        <path
+           style="fill:#ffffff"
+           inkscape:connector-curvature="0"
+           id="a-9"
+           d="M 461.86,253.62 H 25 V 24.88 h 436.86 z" />
+      </g>
+    </mask>
+    <mask
+       id="mask-0"
+       x="174.51"
+       y="91.03"
+       width="1280.35"
+       height="670.56"
+       maskUnits="userSpaceOnUse">
+      <g
+         id="b-9">
+        <path
+           style="fill:#ffffff"
+           inkscape:connector-curvature="0"
+           id="a-6"
+           d="M 1454.86,761.33 H 174.77 V 91 h 1280.09 z" />
+      </g>
+    </mask>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="32"
+     inkscape:cx="24.878573"
+     inkscape:cy="7.6710086"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="2400"
+     inkscape:window-height="1271"
+     inkscape:window-x="2391"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata4559">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-65.626089,-48.198932)">
+    <path
+       d="m 65.626089,48.198932 h 7.450855 v 5.291667 h -7.450855 z"
+       id="path14"
+       inkscape:connector-curvature="0"
+       style="fill:#555555;stroke-width:0.20480256" />
+    <path
+       d="m 73.076944,48.198932 h 21.124145 v 5.291667 H 73.076944 Z"
+       id="path16"
+       inkscape:connector-curvature="0"
+       style="fill:#b31b1b;fill-opacity:1;stroke:none;stroke-width:0.30269545" />
+    <text
+       id="text4-5"
+       style="font-size:4.34397125px;font-family:'Lucida Grande', helvetica, arial, verdana, sans-serif;fill:#383838;fill-opacity:1;stroke-width:0.1085993"
+       y="52.128376"
+       x="75.252571">arXiv.org</text>
+    <text
+       id="text4"
+       style="font-size:4.34397125px;font-family:'Lucida Grande', helvetica, arial, verdana, sans-serif;fill:#ffffff;stroke-width:0.1085993"
+       y="51.942425"
+       x="75.167427">arXiv.org</text>
+    <g
+       id="g934"
+       transform="translate(0.11168045,-0.0967506)">
+      <text
+         x="67.418709"
+         y="52.963989"
+         style="font-size:5.65078449px;font-family:'Lucida Grande', helvetica, arial, verdana, sans-serif;fill:#000000;fill-opacity:1;stroke-width:0.14126962"
+         id="text4-1-4">X</text>
+      <text
+         x="67.302971"
+         y="52.963989"
+         style="font-size:5.65078449px;font-family:'Lucida Grande', helvetica, arial, verdana, sans-serif;fill:#ffffff;stroke-width:0.14126962"
+         id="text4-1">X</text>
+    </g>
+  </g>
+</svg>

@@ -1,7 +1,9 @@
 # Deep Neural Networks for Active Wave Breaking Classification
 
-This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification** currently under review. A pre-print is available from [Overleaf](https://www.overleaf.com/read/mhprcfwhryfw
-).
+This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification** currently under review.
+
+
+[![](badges/overleaf_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw) **|** [![](badges/arxiv_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw)
 
 ## Dependencies
 
@@ -60,6 +62,60 @@ conda install ipython
 
 ## 1. Data
 
+### Manually
+
+- Refer to [Manual Data Preparation](util/README.md).
+
+### Production ready
+
+
+| Model | Link  | Alternative link  |
+|-------|-------|-------------------|
+**Train (10k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Qko68JTZT-JLHKwSJJvvKUQEjmcy0V0j/view?usp=sharing) | - |
+**Train (20k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1uUcSW5s_jm5W-AQeeNxJKbIr6CR5fJIP/view?usp=sharing) | - |
+**Test (1k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1A6IK9IQjFN9JMNx3bUkcWdlO8YN8PbaC/view?usp=sharing) | - |
+**Black Sea (200k)** | [![](badges/google_drive_badge.svg)](?) | - |
+**La Jument 2019 (100k)** | [![](badges/google_drive_badge.svg)]() | - |
+
+**Note:** The models described in the paper and in this documentation were trained using the 20k Dataset.
+
+## Standard Variable Names
+
+The following variables are standard across this repository and scripts that output these quantities should use these names. If a given script has extra output variables, these are documented in each script.
+
+| Variable              | Description                                                                                                                                                  |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `x`                   |  x-coordinate in metric coordinates.                                                                                                                         |
+| `y`                   |  y-coordinate in metric coordinates.                                                                                                                         |
+| `z`                   |  z-coordinate in metric coordinates.                                                                                                                         |
+| `time`                |  date and time. Use a format that [pandas.to_datetime()](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_datetime.html) can understand. |
+| `frame`               |  sequential number.                                                                                                                                          |
+| `i`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
+| `j`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
+| `ic`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
+| `jc`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
+| `xc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
+| `yc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
+| `ir`                  |  radius in the i-direction.                                                                                                                                  |
+| `jr`                  |  radius in the j-direction.                                                                                                                                  |
+| `xr`                  |  radius in the x-direction.                                                                                                                                  |
+| `yr`                  |  radius in the y-direction.                                                                                                                                  |
+| `theta_ij`            |  angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
+| `theta_xy`            |  angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
+| `wave_breaking_event` |  unique wave breaking event id.                                                                                                                              |
+| `vx`                  |  velocity in the x-direction in m/s.                                                                                                                         |
+| `vy`                  |  velocity in the y-direction in m/s.                                                                                                                         |
+| `vi`                  |  velocity in the x-direction in pixels/frame.                                                                                                                |
+| `vj`                  |  velocity in the y-direction in pixels/frame.                                                                                                                |                                 |
+
+## Disclaimer
+
+There is no warranty for the program, to the extent permitted by applicable law except when otherwise stated in writing the copyright holders and/or other parties provide the program “as is” without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. the entire risk as to the quality and performance of the program is with you. should the program prove defective, you assume the cost of all necessary servicing, repair or correction.
+
+
+
+<!--
+
 ### 1.1. Published data
 
 Use the following links to download the pre-defined datasets.
@@ -77,13 +133,13 @@ wave breaking candidates. For this task use the
 
 For help: ```python naive_wave_breaking_detector.py --help```
 
-***Example:***
+**Example:**
 
 ```bash
 python naive_wave_breaking_detector.py --debug --input "input/folder/" --output "output" --subtract-averages "average/folder" --cluster "dbscan" 10 10 --threshold "adaptive" 11 10 --region-of-interest "file.csv" --temporary-path "tmp/" --fit-method "ellipse" --nproc 4
 ```
 
-***Options:***
+**Options:**
 
 - ```--debug```: Runs in debug mode and will save output plots.
 
@@ -113,7 +169,7 @@ python naive_wave_breaking_detector.py --debug --input "input/folder/" --output 
 
 - ```--force-plot-in-parallel-mode```: Will plot outputs even if in parallel mode. Useful to debug even faster.
 
-***Output:***
+**Output:**
 
 The output is this script is a comma-separated value (csv) file. See below for variable name explanation. The extra variable names included in the output file are:
 
@@ -485,6 +541,4 @@ The following variables are standard and all scripts that output these quantitie
 | `vi`                  |  Velocity in the x-direction in pixels/frame.                                                                                                                |
 | `vj`                  |  Velocity in the y-direction in pixels/frame.                                                                                                                |                                 |
 
-## Disclaimer
-
-There is no warranty for the program, to the extent permitted by applicable law except when otherwise stated in writing the copyright holders and/or other parties provide the program “as is” without warranty of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. the entire risk as to the quality and performance of the program is with you. should the program prove defective, you assume the cost of all necessary servicing, repair or correction.
+-->

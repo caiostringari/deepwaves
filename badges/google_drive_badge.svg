@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="28.574999mm"
+   height="5.2916665mm"
+   viewBox="0 0 28.574999 5.2916665"
+   version="1.1"
+   id="svg4562"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="google_drive_badge.svg"
+   inkscape:export-filename="C:\Users\cstringa\Documents\dime\data\google_drive_badge.png"
+   inkscape:export-xdpi="95.99971"
+   inkscape:export-ydpi="95.99971">
+  <defs
+     id="defs4556">
+    <clipPath
+       id="a">
+      <rect
+         style="fill:#ffffff"
+         y="0"
+         x="0"
+         id="rect10"
+         rx="3"
+         height="20"
+         width="108" />
+    </clipPath>
+    <linearGradient
+       gradientUnits="userSpaceOnUse"
+       y1="0"
+       x1="0"
+       gradientTransform="scale(2.32379,0.43033148)"
+       y2="46.4758"
+       x2="0"
+       id="b">
+      <stop
+         id="stop5"
+         stop-opacity=".1"
+         stop-color="#bbb"
+         offset="0" />
+      <stop
+         id="stop7"
+         stop-opacity=".1"
+         offset="1" />
+    </linearGradient>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="7.919596"
+     inkscape:cx="5.3286888"
+     inkscape:cy="4.474497"
+     inkscape:document-units="mm"
+     inkscape:current-layer="g12"
+     showgrid="false"
+     inkscape:window-width="2400"
+     inkscape:window-height="1271"
+     inkscape:window-x="2391"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata4559">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-65.626089,-48.198932)">
+    <g
+       id="g12"
+       clip-path="url(#a)"
+       transform="matrix(0.26458333,0,0,0.26458333,65.626089,48.198932)">
+      <path
+         style="fill:#555555;stroke-width:0.77405691"
+         inkscape:connector-curvature="0"
+         id="path14"
+         d="M 0,0 H 28.160714 V 20 H 0 Z" />
+      <path
+         style="fill:#537abd;stroke-width:1.14404583;fill-opacity:1"
+         inkscape:connector-curvature="0"
+         id="path16"
+         d="M 28.160714,0 H 108 V 20 H 28.160714 Z" />
+      <g
+         transform="translate(-8.2128559,-0.40454102)"
+         style="font-size:11px;font-family:'DejaVu Sans', Verdana, Geneva, sans-serif;text-anchor:middle;fill:#ffffff"
+         id="g20"
+         font-size="11">
+        <g
+           id="g5829">
+          <text
+             x="76.5"
+             y="15"
+             id="text26"
+             style="fill:#010101;fill-opacity:0.3">download</text>
+          <text
+             x="76.5"
+             y="14"
+             id="text28">download</text>
+        </g>
+      </g>
+    </g>
+    <g
+       transform="matrix(0.17262037,0,0,0.17262037,66.59615,48.082839)"
+       id="g5173">
+      <polyline
+         style="fill:#537abd"
+         points="31.868,21 9.868,21 4.868,30 26.556,30  "
+         id="polyline5167" />
+      <polyline
+         style="fill:#2eb672"
+         points="10.962,2 -0.038,20 4.962,30 15.683,10.345  "
+         id="polyline5169" />
+      <polyline
+         style="fill:#fed14b"
+         points="20.962,2 10.962,2 21.712,21 31.962,21 20.962,2  "
+         id="polyline5171" />
+    </g>
+  </g>
+</svg>

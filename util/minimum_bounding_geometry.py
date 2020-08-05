@@ -6,10 +6,6 @@
 # POURPOSE : compute the minimum bounding geometry of surface file for each
 #            timestep. Use a ConvexHull approach
 # AUTHOR   : Caio Eadi Stringari
-# EMAIL    : Caio.EadiStringari@uon.edu.au
-#
-# V1.0     : XX/XX/XXXX [Caio Stringari]
-#
 #
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
@@ -26,6 +22,8 @@ import numpy as np
 
 import xarray as xr
 import pandas as pd
+
+import scipy.spatial
 
 from scipy.spatial import ConvexHull
 
@@ -52,6 +50,7 @@ def call_main_with_surfaces_file():
     top_left_j = []
     length = []
     width = []
+
     for t, time in enumerate(ds["T"].values):
 
         print("  - processing time {} of {}".format(t + 1, len(ds["T"].values)),
@@ -117,12 +116,11 @@ def call_main_with_surfaces_file():
                                               linestyle="--")
                 ax2.plot(vertices[:, 0], vertices[:, 1], 'r-', lw=3)
                 ax2.add_patch(rec_patch)
-
                 plt.savefig("{}/{}".format(outpath, str(t).zfill(6)))
+                plt.show()
                 plt.close()
 
         except Exception:
-
             print("    - error in frame {} \n".format(t))
             top_left_i.append(np.nan)
             top_left_j.append(np.nan)
@@ -180,6 +178,11 @@ if __name__ == "__main__":
                         default=[1],
                         help="A scale factor to shrink the ROI.",)
 
+    parser.add_argument("--compute-area", "-area",
+                        action="store_true",
+                        dest="area",
+                        help="Compute reconstruction area in metric coordinates.",)
+
     parser.add_argument("--user-define-coordinates",
                         nargs=4,
                         action="store",
@@ -205,8 +208,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    has_surface = ast.literal_eval(args.has_surface[0])
+    # chech if output path exists
+    if not os.path.isdir(os.path.dirname(args.output[0])):
+        os.makedirs(os.path.dirname(args.output[0]))
 
+    # main call
+    has_surface = ast.literal_eval(str(args.has_surface[0]))
     if has_surface:
         call_main_with_surfaces_file()
     else:
