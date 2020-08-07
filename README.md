@@ -78,8 +78,8 @@ conda install ipython
 **Train (10k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Qko68JTZT-JLHKwSJJvvKUQEjmcy0V0j/view?usp=sharing) | - |
 **Train (20k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1uUcSW5s_jm5W-AQeeNxJKbIr6CR5fJIP/view?usp=sharing) | - |
 **Test (1k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1A6IK9IQjFN9JMNx3bUkcWdlO8YN8PbaC/view?usp=sharing) | - |
-**Black Sea (200k)** | [![](badges/google_drive_badge.svg)](?) | - |
-**La Jument 2019 (100k)** | [![](badges/google_drive_badge.svg)]() | - |
+**Black Sea (200k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1hh6tMpfEXHNWJm0OQp_d_RMZyeQS55yq/view?usp=sharing) | - |
+**La Jument 2019 (100k)** | **Upcoming** | - |
 
 **Note:** The models described in the paper and in this documentation were trained using the 20k Dataset.
 
@@ -143,7 +143,7 @@ The neural network looks something like this:
 
 Please use the links below to download pre-trained models:
 
-**20K dataset**
+**Scientific Reports (20K dataset)**
 
 | Model | Link  | Alternative link  |
 |-------|-------|-------------------|
@@ -152,6 +152,30 @@ Please use the links below to download pre-trained models:
 **InceptionResNetV2** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1djw0iSvTSdIwTFw_BsEMfbEKL4J1DZb9/view?usp=sharing) | - |
 **MobileNet** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1N0N03QDevACbOAi0Vq9tAMShYBX6s8EA/view?usp=sharing) | - |
 **EfficientNet** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Lb1bYKfIBZXGV4X4tzSXuj-abIvFiJoE/view?usp=sharing) | - |
+
+**Black Sea (200k dataset)**
+
+| Model | Link  | Alternative link  |
+|-------|-------|-------------------|
+**VGG16** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Oy_4q4SJpg0TVE8LWXR7L57S0zD8MP7T/view?usp=sharing) | - |
+**ResNet50V2** | **Upcoming** | - |
+**InceptionResNetV2** | **Upcoming** | - |
+**MobileNet** | **Upcoming** | - |
+**EfficientNet** | **Upcoming** | - |
+
+**Note**: These model was trained from the scratch with data processed by Pedro Guimarães.
+
+**La Jument (100K dataset)**
+
+| Model | Link  | Alternative link  |
+|-------|-------|-------------------|
+**VGG16** | **Upcoming** | - |
+**ResNet50V2** | **Upcoming** | - |
+**InceptionResNetV2** | **Upcoming** | - |
+**MobileNet** | **Upcoming** | - |
+**EfficientNet** | **Upcoming** | - |
+
+**Note**: These model was trained from the using initial weights from the 20K model.
 
 
 ## 4. Model Performance
