@@ -14,7 +14,6 @@ import pathlib
 try:
     import efficientnet.tfkeras as efn
 except Exception:
-    pass
     print(ImportError("\nWarning: run pip install -U --pre efficientnet"))
 
 

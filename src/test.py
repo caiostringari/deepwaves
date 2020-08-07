@@ -1,5 +1,4 @@
 """
-Test Active Wave Breaking Classifier
 
 Test the classifier.
 

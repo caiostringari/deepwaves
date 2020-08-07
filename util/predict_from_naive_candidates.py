@@ -2,13 +2,12 @@
 # ------------------------------------------------------------------------
 #
 #
-# SCRIPT   : predict_active_wave_braeking_v2.py
+# SCRIPT   : predict_from_naive_candidates.py
 # POURPOSE : predict if a wave is actively breaking with a pre-trained
-#            classifier
+#            classifier and results from the naive search.
 # AUTHOR   : Caio Eadi Stringari
-# EMAIL    : caio.stringari@gmail.com
-#
 # V1.0     : 15/04/2020
+# V2.0     : 05/08/2020
 #
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
@@ -47,9 +46,11 @@ Explanation:
 
 --temporary-path : path to write temporary files and/or plots if in debug mode
 
--- number-of-frames : number of frames to plot in debug mode
+--from-frame : at which sequential frame to start
 
---block-shape 1024 1024 : block shape to split the image into.
+--number-of-frames : number of frames to use
+
+--regex : regex used to get frame file names
 
 Output:
 ------
@@ -61,21 +62,17 @@ The only addition is:
     - class : Event classification (0 for unbroken, 1 for breaking)
 """
 
-import matplotlib as mpl
-try:
-    fig = mpl.pyplot.figure()
-    mpl.pyplot.show()
-    mpl.pyplot.close()
-except Exception:
-    mpl.use("Agg")
-
 import os
+import matplotlib
+if os.name == 'posix' and "DISPLAY" not in os.environ:
+    matplotlib.use('Agg')
+
 import warnings
 
 import argparse
 import numpy as np
 
-from pathlib import Path
+import re
 
 from glob import glob
 from natsort import natsorted
@@ -92,8 +89,6 @@ from skimage.color import grey2rgb
 from skimage.transform import resize
 
 # used only for debug
-from copy import copy
-import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -105,9 +100,9 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=DeprecationWarning)
 
 
-def compute_roi(roi, frame_path):
+def compute_roi(roi, frame_path, regex="[0-9]{6,}"):
     """
-    Compute  the region of interest (ROI) a and mask.
+    Compute  the region of interest (ROI) and a mask.
 
     Input can be either a list of coordinates or a dataframe.
 
@@ -119,29 +114,33 @@ def compute_roi(roi, frame_path):
     Parameters:
     ----------
     roi : list, pandas.DataFrame, bool
-        either a list or a pandas dataframe
+        Either a list or a pandas dataframe.
     frame_path : str
-        a valid path pointing to a image file
-
+        A valid path pointing to a image file
+    regex : str
+        Regex to get sequential frame numbers.
 
     Returns:
     -------
     roi_coords : list
-        a list of coordinates
-
+        A list of coordinates
     rec_patch :  matplotlib.patches.Rectangle
-        a rectangle instance of the ROI
-
+        A Rectangle instance of the ROI
     mask : np.array
-        a image array with everything outside the ROI masked
+        A image array with everything outside the ROI masked
     """
 
     # if it is a dataframe
     if isinstance(roi, pd.DataFrame):
 
         # select frame
-        idx = int(os.path.basename(frame_path).split(".")[0])
-        roi = roi.iloc[idx]
+        # idx = int(os.path.basename(frame_path).split(".")[0])
+
+        # try to figure out frame number
+        res = re.search(regex, os.path.basename(frame_path))
+        idx = int(res.group())
+
+        roi = roi.loc[roi["frame"] == idx]
         roi = [int(roi["i"]), int(roi["j"]),
                int(roi["width"]), int(roi["height"])]
 
@@ -152,7 +151,7 @@ def compute_roi(roi, frame_path):
         rec_patch = patches.Rectangle((int(roi[0]), int(roi[1])),
                                       int(roi[2]), int(roi[3]),
                                       linewidth=2,
-                                      edgecolor="r",
+                                      edgecolor="deepskyblue",
                                       facecolor="none",
                                       linestyle="--")
     # if it is not a dataframe
@@ -292,7 +291,7 @@ def plot(frmid, frm, df, roi=False, total_frames=-1, temp_path="tmp"):
     ax2.set_title("Naive Detector + Neural Net")
 
     fig.tight_layout()
-    figname = str(frmid).zfill(8)
+    figname = str(frmid).zfill(8) + "." + args.image_format[0]
     plt.savefig(os.path.join(temp_path, figname),
                 bbox_inches="tight", pad_inches=0.1,
                 dpi=200)
@@ -323,7 +322,6 @@ def main():
 
     # get the input shape for cropping the candidates
     inp_shape = model.input_shape
-    SIZE = (int(args.size[0]), int(args.size[1]))
     print("  Model loaded.")
 
     # load wave breaking candidates
@@ -336,12 +334,18 @@ def main():
             raise ValueError(
                 "Key \"{}\" must be present in the data.".format(t))
 
+    # input image size
+    ISIZE = (int(args.size[0]), int(args.size[1]))
+
     # handle region of interest
     if args.roi[0]:
-        try:
+        is_roi_file = os.path.isfile(args.roi[0])
+    if args.roi[0]:
+        if is_roi_file:
             roi = pd.read_csv(args.roi[0])
-            # fill nans with the previous valid values
-            roi = roi.fillna(method="backfill")
+            # fill nans with the previous/next valid values
+            roi = roi.fillna(method="bfill")
+            roi = roi.fillna(method="ffill")
 
             # check sizes
             if len(roi) != len(frames):
@@ -354,20 +358,30 @@ def main():
                 frames = frames[0:mframes]
                 roi = roi.iloc[0:mframes]
             else:
-                # well, your data is just right
                 pass
-        except Exception:
+        else:
+            roi = False
             raise ValueError("Could not process region-of-interest file.")
+    else:
+        roi = False
+
+    # slice frames to requested range
+    start = int(args.start_frame[0])
+    end = start + int(args.nframes[0])
+    frames = frames[start:end]
 
     # loop over frames
     print("\n  Looping over frames")
     dfs = []
     for k, fname in enumerate(frames):
-        print("   -  processing frame {} of {}".format(k + 1, len(frames)),
-              end="\r")
+        print("   -  processing frame {} of {}".format(k + 1, len(frames)))
 
         # load the frame
         frm = plt.imread(fname)
+        try:
+            frm = frm[:, :, 0]
+        except Exception:
+            frm = frm[:, :]
 
         # frame size
         try:
@@ -376,7 +390,8 @@ def main():
             height, width = frm.shape
 
         # locate the current frame in the breaking candidates dataframe
-        frm_id = int(Path(fname).name.split(".")[0])  # frame id
+        res = re.search(args.regex[0], os.path.basename(fname))
+        frm_id = int(res.group())
 
         df_frm = df.loc[df["frame"] == frm_id]
 
@@ -389,10 +404,10 @@ def main():
             for i, row in df_frm.iterrows():
 
                 # crop iamge
-                left = int(row["ic"] - (SIZE[0] / 2))
-                right = int(row["ic"] + (SIZE[0] / 2))
-                top = int(row["jc"] + (SIZE[1] / 2))
-                bottom = int(row["jc"] - (SIZE[1] / 2))
+                left = int(row["ic"] - (ISIZE[0] / 2))
+                right = int(row["ic"] + (ISIZE[0] / 2))
+                top = int(row["jc"] + (ISIZE[1] / 2))
+                bottom = int(row["jc"] - (ISIZE[1] / 2))
 
                 # check if the croped image is compatible with the whole frame
                 if left < 0:
@@ -460,21 +475,16 @@ def main():
             try:
                 _, roi_rect, _ = compute_roi(roi, fname)
             except Exception:
+                raise
                 roi_rect = False
 
             try:
+                # print(frm.shape, frm.min(), frm.max())
                 plot(frm_id, frm, df_frm, roi=roi_rect,
                      total_frames=len(frames), temp_path=args.temp_path[0])
             except Exception:
-                raise
                 print("Warning: Could not plot frame {} of {}".format(
                     k, len(frames)))
-
-        # break the loop if reach the limit
-        if args.debug:
-            if k >= int(args.nframes[0]):
-                print("-- Breaking the loop at {}.".format(k))
-                break
 
     # output
     dfout = pd.concat(dfs)
@@ -495,6 +505,14 @@ if __name__ == "__main__":
                         required=True,
                         help="Input detected wave breaking candidates.",)
 
+    parser.add_argument("--regex", "-re", "-regex",
+                        nargs=1,
+                        action="store",
+                        dest="regex",
+                        required=False,
+                        default=["[0-9]{6,}"],
+                        help="Regex to search for frames. Default is [0-9]{6,}.",)
+
     parser.add_argument("--frames", "-frames",
                         nargs=1,
                         action="store",
@@ -506,7 +524,8 @@ if __name__ == "__main__":
                         nargs="*",
                         action="store",
                         dest="roi",
-                        required=True,
+                        default=[False],
+                        required=False,
                         help="Region of interest. Must be a file generated "
                              "with minmun_bounding_geometry.py",)
 
@@ -544,6 +563,20 @@ if __name__ == "__main__":
                         dest="nframes",
                         default=[200],
                         help="How many frames to plot.",)
+
+    parser.add_argument("--from-frame", "-start", "-from-frame",
+                        nargs=1,
+                        action="store",
+                        dest="start_frame",
+                        default=[0],
+                        help="At which frame to start.",)
+
+    parser.add_argument("--image-format",
+                        nargs=1,
+                        action="store",
+                        dest="image_format",
+                        default=["jpg"],
+                        help="In what format to save the output image.",)
 
     parser.add_argument("--temporary-path", "-temporary-path",
                         nargs=1,

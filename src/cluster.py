@@ -47,7 +47,7 @@ import argparse
 import numpy as np
 
 # ML
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import DBSCAN, OPTICS
 
 # pandas for I/O
 import pandas as pd
@@ -153,11 +153,19 @@ def main():
         # cluster
         X = pd.DataFrame(np.vstack([Iclf, Jclf, Ic, Jc, Tclf]).T,
                          columns=["i", "j", "ic", "jc", "frame"])
-        clf = DBSCAN(eps=EPS,
+        clf = OPTICS(cluster_method="dbscan",
                      metric="euclidean",
+                     eps=EPS,
+                     max_eps=EPS,
                      min_samples=MIN_SAMPLES,
+                     min_cluster_size=MIN_SAMPLES,
                      n_jobs=NJOBS,
-                     algorithm="ball_tree").fit(X[["i", "j", "frame"]])
+                     algorithm="ball_tree").fit(X)
+        # clf = DBSCAN(eps=EPS,
+        #              metric="euclidean",
+        #              min_samples=MIN_SAMPLES,
+        #              n_jobs=NJOBS,
+        #              algorithm="ball_tree").fit(X[["i", "j", "frame"]])
         X["wave_breaking_event"] = clf.labels_
 
         # reorganize data
@@ -165,7 +173,7 @@ def main():
         for event in X[key].drop_duplicates()["wave_breaking_event"].values:
             events.append(event)
         k += 1
-        break
+        # break
 
     df = dfs[0]
     df["wave_breaking_event"] = events
@@ -212,18 +220,18 @@ if __name__ == "__main__":
                         help="Either DBSCAN or OPTICS. Default is DBSCAN.",)
 
     parser.add_argument("--eps", "-eps",
-                        nargs=2,
+                        nargs=1,
                         action="store",
                         dest="eps",
-                        default=[12],
+                        default=[10],
                         required=False,
                         help="DBSCAN eps parameter (pixels)",)
 
     parser.add_argument("--min-samples", "-min-samples",
-                        nargs=10,
+                        nargs=1,
                         action="store",
                         dest="min_samples",
-                        default=[25],
+                        default=[20],
                         required=False,
                         help="DBSCAN min_samples parameter (pixels)",)
 

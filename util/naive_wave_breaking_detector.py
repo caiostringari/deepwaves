@@ -83,10 +83,11 @@ The output csv columns are organized as follows:
     block_j_bottom : Block start the j-direction (image referential)
     frame : sequential frame number
 """
-import matplotlib as mpl
-# mpl.use("Agg")
-
 import os
+import matplotlib as mpl
+if os.name == 'posix' and "DISPLAY" not in os.environ:
+    mpl.use('Agg')
+
 import shutil
 
 import argparse
@@ -308,7 +309,7 @@ def nextpow2(i):
     return n
 
 
-def compute_roi(roi, frame_path):
+def compute_roi(roi, frame_path, regex="[0-9]{6,}"):
     """
     Compute  the region of interest (ROI) and a mask.
 
@@ -325,6 +326,8 @@ def compute_roi(roi, frame_path):
         Either a list or a pandas dataframe.
     frame_path : str
         A valid path pointing to a image file
+    regex : str
+        Regex to get sequential frame numbers.
 
     Returns:
     -------
@@ -343,8 +346,7 @@ def compute_roi(roi, frame_path):
         # idx = int(os.path.basename(frame_path).split(".")[0])
 
         # try to figure out frame number
-        input_text = frame_path
-        res = re.search("[0-9]{6,}", input_text)
+        res = re.search(regex, os.path.basename(frame_path))
         idx = int(res.group())
 
         roi = roi.loc[roi["frame"] == idx]
@@ -507,7 +509,7 @@ def cluster(img, eps, min_samples, backend="dbscan", nthreads=2,
 def detector(frame, average, roi, output, cluster_pars=["dbscan", 10, 10],
              threshold_pars=["otsu"],
              total_frames=False, fit_kind="circle",
-             block_shape=(256, 256), nthreads=2, debug=False):
+             block_shape=(256, 256), nthreads=2, regex="[0-9]{6,}", debug=False):
     """
     Detect whitecapping using a local thresholding approach.
 
@@ -535,8 +537,11 @@ def detector(frame, average, roi, output, cluster_pars=["dbscan", 10, 10],
         What geometry to fit to a cluster. Can be either circle or ellipse.
     block_shape : tupple
         Block size for view_as_blocks. must be a power of 2
+    regex : string
+        Regex to get the sequential image number "[0-9]{6,}".
     debug : bool
         Run in debug mode. will run in serial and plot outputs.
+
 
     Returns:
     -------
@@ -544,7 +549,7 @@ def detector(frame, average, roi, output, cluster_pars=["dbscan", 10, 10],
     """
     # try to figure out frame number and process ID
     PID = os.getpid()
-    frmid = int(re.search("[0-9]{6,}", frame).group())
+    frmid = int(re.search(regex, os.path.basename(frame)).group())
     print("  -- started processing frame", frmid, "of", total_frames, "with PID", PID)
 
     # ---- try the detection pipeline ----
@@ -555,7 +560,7 @@ def detector(frame, average, roi, output, cluster_pars=["dbscan", 10, 10],
 
         # ---- deal with roi ----
         try:
-            roi_coords, roi_rect, mask = compute_roi(roi, frame)
+            roi_coords, roi_rect, mask = compute_roi(roi, frame, regex=regex)
         except Exception:
             print("   -- died because of Region of Interest processing frame", frmid)
             return 0
@@ -808,6 +813,7 @@ def main():
         frames = natsorted(glob(inp + "/*"))
     else:
         raise IOError("No such file or directory \"{}\"".format(inp))
+    regex = args.regex[0]
 
     # load roi and verify if its a file
     if args.roi[0]:
@@ -881,7 +887,7 @@ def main():
     # detector(frame, average, roi, output, cluster_pars=["dbscan", 10, 10],
     #              threshold_pars=["otsu"],
     #              total_frames=False, fit_kind="circle",
-    #              block_shape=(256, 256), nthreads=1, debug=False)
+    #              block_shape=(256, 256), nthreads=1, debug=False, regex="[0-9]{6,}")
     # ----
 
     # debug - or serial case
@@ -893,7 +899,7 @@ def main():
             detector(frame, average, roi, temp_path,
                      cluster_pars, threshold_pars,
                      total_frames, FIT_KIND,
-                     BLOCK_SHAPE, NTHREADS, debug=True)
+                     BLOCK_SHAPE, NTHREADS, regex=regex, debug=True)
             frame_counter += 1
 
     else:
@@ -910,7 +916,8 @@ def main():
                     repeat(roi), repeat(temp_path),
                     repeat(cluster_pars), repeat(threshold_pars),
                     repeat(total_frames), repeat(FIT_KIND),
-                    repeat(BLOCK_SHAPE), repeat(NTHREADS), repeat(debug))
+                    repeat(BLOCK_SHAPE), repeat(NTHREADS), repeat(regex),
+                    repeat(debug))
         with ProcessPool(max_workers=int(args.nproc[0]), max_tasks=99) as pool:
             for a in fargs:
                 future = pool.schedule(detector, args=a,
@@ -943,6 +950,14 @@ if __name__ == "__main__":
                         dest="input",
                         required=True,
                         help="Input path with extracted frames.",)
+
+    parser.add_argument("--regex", "-re", "-regex",
+                        nargs=1,
+                        action="store",
+                        dest="regex",
+                        required=False,
+                        default=["[0-9]{6,}"],
+                        help="Regex to search for frames. Default is [0-9]{6,}.",)
 
     parser.add_argument("--output", "-o",
                         nargs=1,
@@ -1142,7 +1157,7 @@ if __name__ == "__main__":
     # global number of threads
     NTHREADS = int(args.nthreads[0])
 
-    # This locks sklearn and makes sure it does not create more processes than
+    # this locks sklearn and makes sure it does not create more processes than
     # what it"s being asked for.
     parallel_backend("threading", n_jobs=NTHREADS)
 

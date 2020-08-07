@@ -12,10 +12,13 @@
 #
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
+import warnings
 import matplotlib as mpl
 # mpl.use("Agg")
 
 import os
+
+import re
 
 import argparse
 import numpy as np
@@ -24,19 +27,16 @@ from glob import glob
 from natsort import natsorted
 
 from skimage.io import imread, imsave
-from skimage.util import img_as_ubyte
+# from skimage.util import img_as_ubyte
 
-import xarray as xr
 import pandas as pd
 
 from copy import copy
 
-from scipy.interpolate import griddata
-
 # import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+# from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -48,13 +48,12 @@ sns.set_style("ticks", {"axes.linewidth": 2,
 mpl.rcParams["axes.linewidth"] = 2
 mpl.rcParams['patch.edgecolor'] = "k"
 
-import warnings
 warnings.filterwarnings("ignore")
 
 
-def compute_roi(roi, frame_path):
+def compute_roi(roi, frame_path, regex="[0-9]{6,}"):
     """
-    Compute  the region of interest (ROI) a and mask.
+    Compute  the region of interest (ROI) and a mask.
 
     Input can be either a list of coordinates or a dataframe.
 
@@ -66,40 +65,44 @@ def compute_roi(roi, frame_path):
     Parameters:
     ----------
     roi : list, pandas.DataFrame, bool
-        either a list or a pandas dataframe.
+        Either a list or a pandas dataframe.
     frame_path : str
-        a valid path pointing to a image file
-
+        A valid path pointing to a image file
+    regex : str
+        Regex to get sequential frame numbers.
 
     Returns:
     -------
     roi_coords : list
-        a list of coordinates
-
+        A list of coordinates
     rec_patch :  matplotlib.patches.Rectangle
-        a rectangle instance of the ROI
-
+        A Rectangle instance of the ROI
     mask : np.array
-        a image array with everything outside the ROI masked
+        A image array with everything outside the ROI masked
     """
 
     # if it is a dataframe
     if isinstance(roi, pd.DataFrame):
 
         # select frame
-        idx = int(os.path.basename(frame_path).split(".")[0])
+        # idx = int(os.path.basename(frame_path).split(".")[0])
+
+        # try to figure out frame number
+        res = re.search(regex, os.path.basename(frame_path))
+        idx = int(res.group())
+
         roi = roi.loc[roi["frame"] == idx]
         roi = [int(roi["i"]), int(roi["j"]),
                int(roi["width"]), int(roi["height"])]
 
         # update mask and rectangle
-        img = imread(frame_path + ".png")
+        img = imread(frame_path)
         mask = np.zeros(img.shape)
         mask[roi[1]:roi[1] + roi[3], roi[0]:roi[0] + roi[2]] = 1
         rec_patch = patches.Rectangle((int(roi[0]), int(roi[1])),
                                       int(roi[2]), int(roi[3]),
                                       linewidth=2,
-                                      edgecolor="r",
+                                      edgecolor="deepskyblue",
                                       facecolor="none",
                                       linestyle="--")
     # if it is not a dataframe
@@ -129,38 +132,6 @@ def compute_roi(roi, frame_path):
     return roi_coords, rec_patch, mask
 
 
-def interp(tds, mask, zmin, zmax):
-    """Interp surfaces to pixel domain"""
-
-    z = tds["Z"].values
-
-    # scale
-    scaled_z = (z - zmin) / (zmax - zmin)
-
-    # load pixel coordinates
-    ipx = tds["iR"].values
-    jpx = tds["jR"].values
-
-    # build the tree search
-    X = np.vstack([ipx.flatten(), jpx.flatten(), scaled_z.flatten()]).T
-    df = pd.DataFrame(X, columns=["i", "j", "z"])
-    df = df.dropna()
-
-    # interpolate
-    try:
-        dst = griddata(df[["i", "j"]].values,
-                       df["z"].values,
-                       (I, J), method="linear")
-    except Exception:
-        dst = np.zeros(mask.shape)
-
-    return dst
-
-
-def main():
-    pass
-
-
 if __name__ == "__main__":
 
     print("\nExtracting data for the classifier, please wait...")
@@ -174,7 +145,15 @@ if __name__ == "__main__":
                         action="store",
                         dest="input",
                         required=True,
-                        help="Input with file detected data.",)
+                        help="Input with file naive data.",)
+
+    parser.add_argument("--target-class", "-target-class",
+                        nargs=1,
+                        action="store",
+                        dest="target_class",
+                        default=[-1],
+                        required=False,
+                        help="Target a label if the datata has been previously classified.")
 
     # input configuration file
     parser.add_argument("--frames", "-frames",
@@ -184,21 +163,21 @@ if __name__ == "__main__":
                         required=True,
                         help="Input path with extracted frames.",)
 
-    # input configuration file
-    parser.add_argument("--surfaces", "-surfaces",
+    parser.add_argument("--regex", "-re", "-regex",
                         nargs=1,
                         action="store",
-                        dest="surfaces",
-                        default=[False],
+                        dest="regex",
                         required=False,
-                        help="Input path with extracted surfaces.",)
+                        default=["[0-9]{6,}"],
+                        help="Regex to search for frames. Default is [0-9]{6,}.",)
 
     # ROI
     parser.add_argument("--region-of-interest", "-roi",
                         nargs=1,
                         action="store",
                         dest="roi",
-                        required=True,
+                        default=[False],
+                        required=False,
                         help="Region of interest. Must be a csv file.",)
 
     # samples
@@ -232,76 +211,54 @@ if __name__ == "__main__":
     input = args.input[0]
     df = pd.read_csv(input)
 
-    # use surface information?
-    has_surface = False
-    if args.surfaces[0]:
-        print("\n - Found the surfaces data")
-
-        # load
-        ds = xr.open_dataset(args.surfaces[0])
-
-        has_surface = True
-
-        # compute the scale
-        print("  -- computing surfaces scale range")
-        minima = []
-        maxima = []
-        for t, time in enumerate(ds["T"].values):
-            tds = ds.isel(T=t)
-            z = tds["Z"].values
-            minima.append(np.nanmin(z))
-            maxima.append(np.nanmax(z))
-        zmin = np.nanmin(minima)
-        zmax = np.nanmax(maxima)
+    # select a class, if asked
+    target = int(args.target_class[0])
+    if target > 0:
+        try:
+            df = df.loc[df["class"] == target]
+        except Exception:
+            raise ValueError("Key class is not in dataframe.")
 
     # verify if the input path exists,
     # if it does, then get the frame names
     inp = args.frames[0]
     if os.path.isdir(inp):
         print("\n - Found the image data")
-
         frame_path = os.path.abspath(inp)
         frames = natsorted(glob(inp + "/*"))
-
-        if has_surface:
-            # build a grid for the image
-            img = imread(frames[0])
-            i_grid_img = np.linspace(0, img.shape[0], img.shape[0])
-            j_grid_img = np.linspace(0, img.shape[1], img.shape[1])
-            I, J = np.meshgrid(j_grid_img, i_grid_img)
-
     else:
         raise IOError("No such file or directory \"{}\"".format(inp))
 
+    # get frame names
+    frame_str_list = []
+    for frame in frames:
+        res = re.search(args.regex[0], os.path.basename(frame))
+        frame_str_list.append(res.group())
+    df_frm = pd.DataFrame()
+    df_frm["frame"] = frames
+    df_frm["string"] = frame_str_list
+    pad = len(frame_str_list[0])
+
     # handle region of interest
+    # load roi and verify if its a file
     if args.roi[0]:
-        try:
+        is_roi_file = os.path.isfile(args.roi[0])
+    if args.roi[0]:
+        if is_roi_file:
             roi = pd.read_csv(args.roi[0])
-            # fill nans with the previous valid values
-            roi = roi.fillna(method="backfill")
-
-            # check sizes
-            if len(roi) != len(frames):
-                mframes = min(len(roi), len(frames))
-                print("  \nwarning: number of frames does not match number of"
-                      " of rows in the ROI file. Setting number of frames"
-                      " to: {}".format(mframes))
-
-                # cut the lists to size
-                frames = frames[0:mframes]
-                roi = roi.iloc[0:mframes]
-            else:
-                # well, your data is just right
-                pass
-        except Exception:
-            raise
+            # fill nans with the previous/next valid values
+            roi = roi.fillna(method="bfill")
+            roi = roi.fillna(method="ffill")
+        else:
+            roi = False
+            raise ValueError("Could not process region-of-interest file.")
+    else:
+        roi = False
 
     # create the output path, if not present
     output = os.path.abspath(args.output[0])
     os.makedirs(output, exist_ok=True)
     os.makedirs(output + "/img/", exist_ok=True)
-    if has_surface:
-        os.makedirs(output + "/srf/", exist_ok=True)
     os.makedirs(output + "/plt/", exist_ok=True)
 
     # verify if "cluster", "ic", "jc", R1, "source_frame" are in df
@@ -330,12 +287,12 @@ if __name__ == "__main__":
             row = df.sample()
 
             # load frame
-            fname = os.path.join(frame_path,
-                                 str(int(row["frame"])).zfill(8))
-            img = imread(fname + ".png")
+            frame_number = str(int(row["frame"])).zfill(pad)
+            frame_path = df_frm.loc[df_frm["string"] == frame_number]["frame"].values[0]
+            img = imread(frame_path)
 
             # get ROI
-            roi_coords, rec_patch, mask = compute_roi(roi, frame_path=fname)
+            roi_coords, rec_patch, mask = compute_roi(roi, frame_path=frame_path)
             full_img = copy(img)
 
             # crop image
@@ -361,42 +318,15 @@ if __name__ == "__main__":
             extent = [left, right, top, bottom]
             crop = img[bottom:top, left:right]
 
-            # get surface, if present
-            if has_surface:
-
-                i = int(row["source_frame"].split(".")[0])
-                tds = ds.isel(T=i)
-                surf = interp(tds, mask, zmin, zmax)
-
-                # crop
-                left = int(row["ic"] - (dx / 2))
-                right = int(row["ic"] + (dx / 2))
-                top = int(row["ic"] + (dy / 2))
-                bottom = int(row["ic"] - (dy / 2))
-                extent = [left, right, top, bottom]
-                csurf = surf[bottom:top, left:right]
-
-                if np.where(img_as_ubyte(csurf).flatten() == 0)[0].shape[0] > 0:
-                    zeros.append(1)
-                else:
-                    zeros.append(0)
-            else:
-                zeros.append(0)
-
             # save cropped area
             fname = "{}/img/{}.png".format(output, str(k).zfill(6))
             imsave(fname, crop)
-            if has_surface:
-                fname = "{}/srf/{}.png".format(output, str(k).zfill(6))
-                imsave(fname, img_as_ubyte(csurf))
 
             # open a new figure
             fig, ax = plt.subplots(figsize=(12, 10))
 
             # plot the image and detected instance
             ax.imshow(full_img, cmap="Greys_r", vmin=0, vmax=255)
-            if has_surface:
-                ax.imshow(surf, vmin=0, vmax=0.75, cmap="plasma", alpha=0.5)
             ax.scatter(row["ic"], row["jc"], 80, marker="+",
                        linewidth=2, color="r", alpha=1)
             ax.add_patch(copy(rec_patch))
@@ -421,8 +351,8 @@ if __name__ == "__main__":
             else:
                 c = patches.Ellipse((row["ic"].values[0],
                                      row["jc"].values[0]),
-                                    row["ir"].values[0]*2,
-                                    row["jr"].values[0]*2,
+                                    row["ir"].values[0] * 2,
+                                    row["jr"].values[0] * 2,
                                     angle=row["theta_ij"].values[0],
                                     facecolor='none',
                                     edgecolor="r",
@@ -451,17 +381,17 @@ if __name__ == "__main__":
             ax.set_xlabel("$i$ [pixel]")
             ax.set_ylabel("$j$ [pixel]")
 
-            # txt = "Sample {} of {}".format(k, N)
-            # ax.text(0.01, 0.01, txt, color="deepskyblue",
-            #         va="bottom", zorder=100, transform=ax.transAxes,
-            #         ha="left", fontsize=14,
-            #         bbox=dict(boxstyle="square", ec="none", fc="0.1",
-            #                   lw=1, alpha=0.7))
+            txt = "Sample {} of {}".format(k, N)
+            ax.text(0.01, 0.01, txt, color="deepskyblue",
+                    va="bottom", zorder=100, transform=ax.transAxes,
+                    ha="left", fontsize=14,
+                    bbox=dict(boxstyle="square", ec="none", fc="0.1",
+                              lw=1, alpha=0.7))
 
             # save plot
             fig.tight_layout()
-            fname = "{}/plt/{}.svg".format(output, str(k).zfill(6))
-            plt.savefig(fname, pad_inches=0.01, bbox_inches="tight", dpi=300)
+            # fname = "{}/plt/{}.svg".format(output, str(k).zfill(6))
+            # plt.savefig(fname, pad_inches=0.01, bbox_inches="tight", dpi=300)
             fname = "{}/plt/{}.png".format(output, str(k).zfill(6))
             plt.savefig(fname, pad_inches=0.01, bbox_inches="tight", dpi=300)
             plt.close()
@@ -473,15 +403,14 @@ if __name__ == "__main__":
         except Exception:
             # raise
             print("  - warning: found an error, ignoring this sample.")
+            raise
         k += 1
 
     # save dataframe to file
     df_samples = pd.concat(df_samples)
     fname = "{}/labels.csv".format(output)
     df_samples["sample"] = samples
-    df_samples["label"] = "0"
-    if has_surface:
-        df_samples["zeros"] = zeros
+    df_samples["label"] = target
     df_samples.to_csv(fname, index=False)
 
     print("\n\nMy work is done!\n")
