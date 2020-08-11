@@ -22,8 +22,9 @@ This repository contains code and data to reproduce the results of the paper **D
    + [5.3 Clustering Wave Breaking Events](#53-clustering-wave-breaking-events)
    + [5.4. Plot Wave Breaking Detection Results](#54-plot-wave-breaking-detection-results)
  * [6. Wave Breaking Statistics](#6-wave-breaking-statistics)
- * [7. Gallery](#7-gallery)
- * [8. Standard Variable Names](#8-standard-variable-names)
+ * [7. Model Interpretation](#7-model-interpretation)
+ * [8. Gallery](#8-gallery)
+ * [9. Standard Variable Names](#9-standard-variable-names)
  * [Disclaimer](#disclaimer)
 
 ## 1. Dependencies
@@ -81,16 +82,11 @@ conda install ipython
 **Black Sea (200k)** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1hh6tMpfEXHNWJm0OQp_d_RMZyeQS55yq/view?usp=sharing) | - |
 **La Jument 2019 (100k)** | **Upcoming** | - |
 
-**Note:** The models described in the paper and in this documentation were trained using the 20k Dataset.
-
 ## 3. Training
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](notebook/train_wave_breaking_classifier_v2.ipynb)
 
 **Note**: The training dataset used here is a smaller version (10k) of the published dataset so it can run on Google Colab. The 20K dataset takes over 6 hours to train and Google will disconnect your session.
-
-This scripts loads manually labeled wave image data and classify
-the images into "breaking" (1) or "no-breaking" (0).
 
 The data needs to be in a folder which has sub-folders "0" and "1"
 
@@ -112,7 +108,7 @@ updated from the scratch here. These models have no knowledge of the present dat
 python train.py --data "train/" --backbone "VGG16" --model "vgg_test" --logdir "logs/" --random-state 11 --validation-size 0.2 --learning-rate 0.00001 --epochs 200 --batch-size 64 --dropout 0.5 --input-size 256 256
 ```
 
-**Options:**
+**Arguments:**
 
 - `--data` Input train data path.
 
@@ -163,7 +159,7 @@ Please use the links below to download pre-trained models:
 **MobileNet** | **Upcoming** | - |
 **EfficientNet** | **Upcoming** | - |
 
-**Note**: These model was trained from the scratch with data processed by Pedro Guimarães.
+**Note**: These models were trained from the scratch with data processed by Pedro Guimarães.
 
 **La Jument (100K dataset)**
 
@@ -175,7 +171,7 @@ Please use the links below to download pre-trained models:
 **MobileNet** | **Upcoming** | - |
 **EfficientNet** | **Upcoming** | - |
 
-**Note**: These model was trained from the using initial weights from the 20K model.
+**Note**: These models were trained from the using initial weights from the 200K model.
 
 
 ## 4. Model Performance
@@ -190,7 +186,7 @@ To evaluate a pre-trained model on test data, use the [```test```](src/test.py) 
 python test.py --data "path/to/test/data/" --model "VGG16.h5" --threshold 0.5 -- output "path/to/results.csv"
 ```
 
-**Options:**
+**Arguments:**
 
 - `--data` Input test data. Use same structure as when training.
 
@@ -235,7 +231,7 @@ To plot the training curves and a confusion matrix, do:
 python plot_history_and_confusion_matrix.py --history "path/to/history.csv" --results "path/to/results.csv" --output "figure.png"
 ```
 
-**Options:**
+**Arguments:**
 
 - `--history` Training history. Comes from `train_wave_breaking_classifier_v2.py`.
 
@@ -305,7 +301,7 @@ pred
 python predict.py --data "pred/" --model "VGG16.h5" --threshold 0.5 --output "results.csv"
 ```
 
-**Options:**
+**Arguments:**
 
 - `--data` Input test data.
 
@@ -326,7 +322,7 @@ to obtain only **active wave breaking** instances. This script runs on ```CPU```
 python predict_from_naive_candidates.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "region_of_interest.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
 ```
 
-**Options:**
+**Arguments:**
 
 - ```--debug``` Runs in debug mode and will save output plots.
 
@@ -352,7 +348,7 @@ The output of this script is a comma-separated value (csv) file. It looks like e
 
 ### 5.3 Clustering Wave Breaking Events
 
-To cluster wave breaking events in time and space use [```cluster.py```](util/cluster.py). This script can use the results of ```naive_wave_breaking_detector``` directly but this is not recommended. It is recommended that you narrow down the candidates for clustering using [```predict_from_naive_candidates.py```](util/predict_from_naive_candidates.py) first.
+To cluster wave breaking events in time and space use [```cluster.py```](util/cluster.py). This script can use the results of [```naive_wave_breaking_detector.py```](util/naive_wave_breaking_detector.py) directly but this is not recommended. It is recommended that you narrow down the candidates for clustering using [```predict_from_naive_candidates.py```](util/predict_from_naive_candidates.py) first.
 
 **Example:**
 
@@ -360,7 +356,7 @@ To cluster wave breaking events in time and space use [```cluster.py```](util/cl
 python cluster.py -i "active_wave_breaking_events.csv" -o "clusters.csv" --cluster method "DBSCAN" --eps 10 -min-samples 10
 ```
 
-**Options:**
+**Arguments:**
 
 - ```-i [--input]``` Input path with images
 
@@ -390,7 +386,7 @@ Plot the results of the wave breaking detection algorithms. Can handle outputs o
 python plot_wave_breaking_detection_results.py --input "clustered_events.csv" --output "path/to/output/" --frames "path/to/frames/" --region-of-interest "path/to/roi.csv" --frames-to-plot 1000
 ```
 
-**Options:**
+**Arguments:**
 
 - ```-i [--input]``` Input csv file.
 
@@ -409,7 +405,38 @@ python plot_wave_breaking_detection_results.py --input "clustered_events.csv" --
 
 Please refer to [```Wave Breaking Statistics```](stats/README.md).
 
-## 7. Gallery
+## 7. Model Interpretation
+
+Use [```interpret.py```](util/interpret.py) to apply Grad-CAM to data samples. Organize your data as follows:
+
+```
+gradcam
+    ├───images
+        ├───img_00001.png
+        ├───img_00002.png
+        ├───...
+        ├───img_0000X.png
+```
+
+**Example:**
+
+```bash
+python interpret.py --data "path/to/gradcam" --model "VGG16.h5" -o "path/to/output"
+```
+
+**Arguments:**
+
+- ```-data``` Input image data path.
+
+- ```-o [--output]``` Output path.
+
+- ```-model``` pre-trained VGG16 model.
+
+
+**Note**: This script will only work with VVG16 models.
+
+
+## 8. Gallery
 
 **La Jument:**
 
@@ -423,7 +450,11 @@ Please refer to [```Wave Breaking Statistics```](stats/README.md).
 
 ![](docs/aquaalta_naive_plus_robust.gif)
 
-## 8. Standard Variable Names
+**Grad-CAM (Black Sea):**
+
+![](docs/grad_cam.gif)
+
+## 9. Standard Variable Names
 
 The following variables are standard across this repository and scripts that output these quantities should use these names. If a given script has extra output variables, these are documented in each script.
 

@@ -18,11 +18,11 @@ NOTE: Get a pre-trained model before trying to use this script!
 
 Usage:
 -----
-python predict_active_wave_braeking_v2.py --help
+python predict_from_naive_candidates.py --help
 
 Example:
 -------
-python predict_active_wave_breaking_v2.py --debug \
+python predict_from_naive_candidates.py --debug \
                                           --model "path/to/model.h5 \
                                           --threshold 0.5
                                           --input path/to/frames/ \
