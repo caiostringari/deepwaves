@@ -338,7 +338,11 @@ python predict_from_naive_candidates.py --debug --input "naive_results.csv" --mo
 
 - ```-temporary-path``` Output path for debug plots.
 
-- ```--frames-to-plot``` Number of frames to plot.
+- ```--frames-to-process``` Number of frames to process.
+
+- ```--from-frame``` Start frame.
+
+- ```--regex``` Regular expression to find input frames. Default is `"[0-9]{6,}"`.
 
 - ```--threshold``` Threshold for activation in the last (sigmoid) layer of the model. Default is `0.5`.
 
@@ -397,6 +401,10 @@ python plot_wave_breaking_detection_results.py --input "clustered_events.csv" --
 - ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](../../util/minimum_bounding_geometry.py) to generate a valid input file.
 
 - ```--frames-to-plot``` Number of frames to plot.
+
+- ```--from-frame``` Number of frames to plot.
+
+- ```--regex``` Regular expression to find input frames. Default is `"[0-9]{6,}"`.
 
 ***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, `frame`, `wave_breaking_event`.
 

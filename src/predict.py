@@ -1,10 +1,4 @@
 """
-PROGRAM   : predict.py
-POURPOSE  : classify wave breaking using a convnet
-AUTHOR    : Caio Eadi Stringari
-EMAIL     : caio.stringari@gmail.com
-V1.0      : 16/07/2020 [Caio Stringari]
-
 Predict Active Wave Breaking
 
 All you need is a pre-trained model and a series of images
@@ -23,6 +17,12 @@ You will need to download a pre-trained model if you don't have one.
 
 Trained on 10k samples:
 https://drive.google.com/file/d/1FOXj-uJdXtyzxOVRHHuj1X8Xx0B8jaiT/view?usp=sharing
+
+PROGRAM   : predict.py
+POURPOSE  : classify wave breaking using a convnet
+AUTHOR    : Caio Eadi Stringari
+EMAIL     : caio.stringari@gmail.com
+V1.0      : 16/07/2020 [Caio Stringari]
 """
 import argparse
 

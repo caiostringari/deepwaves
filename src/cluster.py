@@ -1,15 +1,3 @@
-# ------------------------------------------------------------------------
-# ------------------------------------------------------------------------
-#
-#
-# SCRIPT   : cluster_wave_breaking.py
-# POURPOSE : cluster the results of wave breaking detection
-# AUTHOR   : Caio Eadi Stringari
-# V2.0     : 15/04/2020 [Caio Stringari]
-#
-#
-# ------------------------------------------------------------------------
-# ------------------------------------------------------------------------
 r"""
 Cluster wave breaking events in time and space. This script can use the results
 of naive_wave_breaking_detector directly but this is not recommended.
@@ -42,6 +30,11 @@ The output CSV columns are organized are the same as described in
 
 The only addition is:
     - wave_breaking_event : unique wave breaking event (space and time).
+
+# SCRIPT   : cluster_wave_breaking.py
+# POURPOSE : cluster the results of wave breaking detection
+# AUTHOR   : Caio Eadi Stringari
+# V2.0     : 15/04/2020 [Caio Stringari]
 """
 import argparse
 import numpy as np

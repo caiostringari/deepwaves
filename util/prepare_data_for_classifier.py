@@ -36,10 +36,7 @@ from copy import copy
 # import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-# from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-
 import seaborn as sns
-import matplotlib.pyplot as plt
 sns.set_context("paper", font_scale=2, rc={"lines.linewidth": 2.0})
 sns.set_style("ticks", {"axes.linewidth": 2,
                         "legend.frameon": True,

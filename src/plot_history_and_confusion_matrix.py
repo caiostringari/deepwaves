@@ -1,8 +1,8 @@
 """
 Plot model history and confusion matrix
 
-# PROGRAM   : test_wave_breaking_classifier.py
-# POURPOSE  : classify wave breaking using a convnets
+# PROGRAM   : plot_history_and_confusion_matrix.py
+# POURPOSE  : plot training results
 # AUTHOR    : Caio Eadi Stringari
 # EMAIL     : caio.stringari@gmail.com
 # V1.0      : 05/05/2020 [Caio Stringari]

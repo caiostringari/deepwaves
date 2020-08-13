@@ -1,5 +1,4 @@
 """
-
 Interpret the results of the classifier using GradCAM.
 
 You will need to download a pre-trained model.
@@ -8,7 +7,6 @@ You will need to download a pre-trained model.
 # AUTHOR    : Caio Eadi Stringari
 # EMAIL     : caio.stringari@gmail.com
 # V1.0      : 10/08/2020 [Caio Stringari]
-
 """
 import os
 

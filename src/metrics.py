@@ -1,5 +1,11 @@
 """
 Sumarize results for the train/valid/test splits.
+
+# PROGRAM   : metrics.py
+# POURPOSE  : compute model metrics on the test datasete
+# AUTHOR    : Caio Eadi Stringari
+# EMAIL     : caio.stringari@gmail.com
+# V1.0      : 05/05/2020 [Caio Stringari]
 """
 import argparse
 

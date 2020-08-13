@@ -13,7 +13,7 @@ test
 
 You will need to download a pre-trained model
 
-# PROGRAM   : test_wave_breaking_classifier.py
+# PROGRAM   : test.py
 # POURPOSE  : classify wave breaking using a convnets
 # AUTHOR    : Caio Eadi Stringari
 # EMAIL     : caio.stringari@gmail.com

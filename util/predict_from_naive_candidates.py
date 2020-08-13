@@ -326,6 +326,8 @@ def main():
 
     # load wave breaking candidates
     df = pd.read_csv(args.input[0])
+    # drop any nans
+    df = df.dropna()
 
     # ckeck if all needed keys are present
     targets = ["ic", "jc", "ir", "frame", "theta_ij"]
@@ -367,8 +369,15 @@ def main():
 
     # slice frames to requested range
     start = int(args.start_frame[0])
-    end = start + int(args.nframes[0])
+    if int(args.nframes[0]) > 0:
+        end = start + int(args.nframes[0])
+    else:
+        end = len(frames)
     frames = frames[start:end]
+
+    start_df = df["frame"].min()
+    if start_df < start:
+        print("Warning: First frame in the dataframe is {}, user asked to start from {}.".format(start_df, start))
 
     # loop over frames
     print("\n  Looping over frames")
@@ -557,11 +566,11 @@ if __name__ == "__main__":
                         dest="debug",
                         help="Debug plots.",)
 
-    parser.add_argument("--frames-to-plot", "-nframes", "--nframes",
+    parser.add_argument("--frames-to-process", "-nframes", "--nframes",
                         nargs=1,
                         action="store",
                         dest="nframes",
-                        default=[200],
+                        default=[-1],
                         help="How many frames to plot.",)
 
     parser.add_argument("--from-frame", "-start", "-from-frame",

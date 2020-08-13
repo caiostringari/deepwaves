@@ -9,21 +9,19 @@
 
 ### 1.1. Extracting wave breaking candidates from raw data
 
-## Naïve Wave Breaking Detection
-
 This is the main wave breaking detection script. It will naively detect wave breaking
 using an default adaptive thresholding approach. This script can also be used to generate binary
 masks that can be used by other algorithms.
 
 For help: ```python naive_wave_breaking_detector.py --help```
 
-### Example:
+**Example:**
 
 ```bash
 python naive_wave_breaking_detector.py --debug --input "input/folder/" --output "output" --subtract-averages "average/folder" --cluster "dbscan" 10 10 --threshold "file" "file.csv" --region-of-interest "file.csv" --temporary-path "tmp" --fit-method "ellipse" --nproc 4
 ```
 
-### Options:
+**Arguments:**
 
 - ```--debug```: Runs in debug mode and will save output plots.
 
@@ -53,7 +51,7 @@ python naive_wave_breaking_detector.py --debug --input "input/folder/" --output 
 
 - ```--force-plot-in-parallel-mode```: Will plot outputs even if in parallel mode. Useful to debug even faster.
 
-### Output:
+**Output:**
 
 The output is this script is a comma-separated value (csv) file. See above for variable name explanation. The extra variable names included in the output file are:
 

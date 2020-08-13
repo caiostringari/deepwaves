@@ -1,15 +1,3 @@
-# ------------------------------------------------------------------------
-# ------------------------------------------------------------------------
-#
-#
-# SCRIPT   : plot_wave_breaking_detection_results.py
-# POURPOSE : plot the results from a wave breaking detecion algorithm
-# AUTHOR   : Caio Eadi Stringari
-# V2.0     : 16/04/2020 [Caio Stringari]
-#
-#
-# ------------------------------------------------------------------------
-# ------------------------------------------------------------------------
 r"""
 Plot the results from a wave breaking detecion algorithm
 
@@ -33,7 +21,10 @@ Explanation:
 
 --save-binary-masks : if parsed, will save the binary masks
 
-Other parameters:
+SCRIPT   : plot_wave_breaking_detection_results.py
+POURPOSE : plot the results from a wave breaking detecion algorithm
+AUTHOR   : Caio Eadi Stringari
+V2.0     : 16/04/2020 [Caio Stringari]
 
 """
 
@@ -68,7 +59,7 @@ from matplotlib.lines import Line2D
 pd.options.mode.chained_assignment = None
 
 
-def compute_roi(roi, frame_path):
+def compute_roi(roi, frame_path, regex="[0-9]{6,}"):
     """
     Compute  the region of interest (ROI) and a mask.
 
@@ -104,7 +95,7 @@ def compute_roi(roi, frame_path):
 
         # try to figure out frame number
         input_text = frame_path
-        res = re.search("[0-9]{6,}", input_text)
+        res = re.search(regex, input_text)
         idx = int(res.group())
 
         roi = roi.loc[roi["frame"] == idx]
@@ -148,7 +139,7 @@ def compute_roi(roi, frame_path):
     return roi_coords, rec_patch, mask
 
 
-def plot(frmid, frm, df, breakers=False, roi=False, total_frames=-1, temp_path="tmp"):
+def plot(frmid, frm, df, breakers=False, roi=False, total_frames=-1, temp_path="tmp",):
     """
     Plot the results of the classification.
 
@@ -262,6 +253,14 @@ if __name__ == "__main__":
                         required=True,
                         help="Input detected wave breaking candidates.",)
 
+    parser.add_argument("--regex", "-re", "-regex",
+                        nargs=1,
+                        action="store",
+                        dest="regex",
+                        required=False,
+                        default=["[0-9]{6,}"],
+                        help="Regex to search for frames. Default is [0-9]{6,}.",)
+
     parser.add_argument("--frames", "-frames",
                         nargs=1,
                         action="store",
@@ -368,7 +367,7 @@ if __name__ == "__main__":
         frm = plt.imread(fname)
 
         # locate the current frame in the breaking candidates dataframe
-        frm_id = int(re.search("[0-9]{6,}", fname).group())  # frame id
+        frm_id = int(re.search(args.regex[0], fname).group())  # frame id
 
         df_frm = df.loc[df["frame"] == frm_id]
 
@@ -378,7 +377,7 @@ if __name__ == "__main__":
 
             # try to compute the ROI
             try:
-                _, roi_rect, _ = compute_roi(roi, fname)
+                _, roi_rect, _ = compute_roi(roi, fname, regex=args.regex[0])
             except Exception:
                 roi_rect = False
 

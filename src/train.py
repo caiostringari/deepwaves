@@ -22,7 +22,7 @@ updated from the scratch here.
 These models have no knowledge of the present data and, consequently,
 transfered learning does not work well.
 
-PROGRAM   : wave_breaking_classifier.py
+PROGRAM   : train.py
 POURPOSE  : classify wave breaking using a convnets
 AUTHOR    : Caio Eadi Stringari
 EMAIL     : caio.stringari@gmail.com
