@@ -154,12 +154,12 @@ Please use the links below to download pre-trained models:
 | Model | Link  | Alternative link  |
 |-------|-------|-------------------|
 **VGG16** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Oy_4q4SJpg0TVE8LWXR7L57S0zD8MP7T/view?usp=sharing) | - |
-**ResNet50V2** | **Upcoming** | - |
+**ResNet50V2** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Exs1_bpE9Rqk9aPDlzfH4HDgF2wygR4c/view?usp=sharing) | - |
 **InceptionResNetV2** | **Upcoming** | - |
 **MobileNet** | **Upcoming** | - |
 **EfficientNet** | **Upcoming** | - |
 
-**Note**: These models were trained from the scratch with data processed by Pedro Guimarães.
+**Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than
 
 **La Jument (100K dataset)**
 
@@ -313,8 +313,7 @@ python predict.py --data "pred/" --model "VGG16.h5" --threshold 0.5 --output "re
 
 ### 5.2. Predicting from the Results of the Naïve Detector
 
-Use the results from the [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) and a pre-trained neural network
-to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can be much faster on ```GPU```.
+Use [```predict from naïve candidates```](util/predict_from_naive_candidates.py) and the results from the [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) and a pre-trained neural network to obtain only **active wave breaking** instances. This script runs on ```CPU``` but can be much faster on ```GPU```.
 
 **Example:**
 
@@ -352,7 +351,7 @@ The output of this script is a comma-separated value (csv) file. It looks like e
 
 ### 5.3 Clustering Wave Breaking Events
 
-To cluster wave breaking events in time and space use [```cluster.py```](util/cluster.py). This script can use the results of [```naive_wave_breaking_detector.py```](util/naive_wave_breaking_detector.py) directly but this is not recommended. It is recommended that you narrow down the candidates for clustering using [```predict_from_naive_candidates.py```](util/predict_from_naive_candidates.py) first.
+To cluster wave breaking events in time and space use [```cluster.py```](src/cluster.py). This script can use the results of [```naive_wave_breaking_detector.py```](util/naive_wave_breaking_detector.py) directly but this is not recommended. It is recommended that you narrow down the candidates for clustering using [```predict_from_naive_candidates.py```](util/predict_from_naive_candidates.py) first.
 
 **Example:**
 
@@ -415,7 +414,7 @@ Please refer to [```Wave Breaking Statistics```](stats/README.md).
 
 ## 7. Model Interpretation
 
-Use [```interpret.py```](util/interpret.py) to apply Grad-CAM to data samples. Organize your data as follows:
+Use [```interpret.py```](src/interpret.py) to apply Grad-CAM to data samples. Organize your data as follows:
 
 ```
 gradcam
