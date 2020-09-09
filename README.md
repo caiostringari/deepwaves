@@ -159,7 +159,7 @@ Please use the links below to download pre-trained models:
 **MobileNet** | **Upcoming** | - |
 **EfficientNet** | **Upcoming** | - |
 
-**Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than
+**Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than the 20K dataset seen in the paper. 
 
 **La Jument (100K dataset)**
 
