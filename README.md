@@ -84,7 +84,7 @@ conda install ipython
 
 ## 3. Training
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](notebook/train_wave_breaking_classifier_v2.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1b7h90t3EJx91UTyzCQq8YSyTYzW_lJnZ?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](notebook/train.ipynb)
 
 **Note**: The training dataset used here is a smaller version (10k) of the published dataset so it can run on Google Colab. The 20K dataset takes over 6 hours to train and Google will disconnect your session.
 
@@ -177,6 +177,8 @@ Please use the links below to download pre-trained models:
 ## 4. Model Performance
 
 ### 4.1. Evaluating
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1z8KY_krozpfG5wPomNu-fiq4D_OLMgxW?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](notebook/test.ipynb)
 
 To evaluate a pre-trained model on test data, use the [```test```](src/test.py) script.
 
@@ -284,7 +286,7 @@ The table below summarizes the results presented in the paper. Results are sorte
 
 ### 5.1 Predicting on New Data
 
-Create a dataset either manually or with the provided tools. The data structure is as follows then use the [```predict```](src/test.py) script.
+Create a dataset either manually or with the provided tools then use the [```predict```](src/test.py) script.  The data structure is as follows:
 
 ```
 pred
@@ -413,6 +415,8 @@ python plot_wave_breaking_detection_results.py --input "clustered_events.csv" --
 Please refer to [```Wave Breaking Statistics```](stats/README.md).
 
 ## 7. Model Interpretation
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1ERFWwwRmLtfzIOKSK_x5d6jpIAi2rM6d?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](notebook/interpret.ipynb)
 
 Use [```interpret.py```](src/interpret.py) to apply Grad-CAM to data samples. Organize your data as follows:
 

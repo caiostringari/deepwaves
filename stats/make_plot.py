@@ -88,12 +88,13 @@ if __name__ == '__main__':
 
     # duration
     xpdf = np.arange(0, 4, 0.01)
-    pars = stats.weibull_min.fit(df["wave_breaking_duration"])
-    ypdf = stats.weibull_min.pdf(xpdf, *pars)
+    pars = stats.gamma.fit(df["wave_breaking_duration"])
+    print(pars)
+    ypdf = stats.gamma.pdf(xpdf, *pars)
     kde = sm.nonparametric.KDEUnivariate(df["wave_breaking_duration"])
     kde.fit(bw=0.05)
     mode = kde.support[np.argmax(kde.density)]
-    label = r"Weibull PDF"
+    label = r"Gamma PDF"
 
     ax1.hist(df["wave_breaking_duration"], density=True, bins=np.arange(
         0, 2, 0.1), color="0.15", alpha=0.5)
@@ -160,7 +161,7 @@ if __name__ == '__main__':
     label = r"Beta PDF"
 
     ax4.hist(df["wave_breaking_area"] / df["ellipse_minor_axis"]**2, density=True,
-             color="0.15", alpha=0.5, bins=np.arange(0, 1, 0.05))
+             color="0.15", alpha=0.5, bins=np.arange(0, 1, 0.025))
     ax4.plot(xpdf, ypdf, color="dodgerblue", lw=3, label=label)
     ax4.axvline((df["wave_breaking_area"] / df["ellipse_minor_axis"]**2).mean(), color="indigo", lw=3,
                 ls="--", label="Mean={0:.2f}".format((df["wave_breaking_area"] / df["ellipse_minor_axis"]**2).mean()))
@@ -169,7 +170,7 @@ if __name__ == '__main__':
     ax4.axvline(0.11, color="r", lw=3, ls="--", label="Duncan (1981) (0.11)")
     ax4.set_xlabel(r"$A_{{br}}/b^{2}$ $[-]$")
     ax4.set_ylabel(r"$p(A_{{br}}/b^{2})$ $[-]$")
-    ax4.set_xlim(0, 0.6)
+    ax4.set_xlim(0, 0.5)
     lg = ax4.legend(loc=1, fontsize=10)
     lg.get_frame().set_color("w")
 
