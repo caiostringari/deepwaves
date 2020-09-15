@@ -87,46 +87,49 @@ if __name__ == '__main__':
           ) = plt.subplots(2, 3, figsize=(11, 6))
 
     # duration
-    xpdf = np.arange(0, 4, 0.01)
-    pars = stats.gamma.fit(df["wave_breaking_duration"])
+    xpdf = np.arange(0, 1, 0.01)
+    X = df["wave_breaking_duration"]/(1/df["peak_frequency_1"])
+    pars = stats.gamma.fit(X)
     print(pars)
     ypdf = stats.gamma.pdf(xpdf, *pars)
-    kde = sm.nonparametric.KDEUnivariate(df["wave_breaking_duration"])
+    kde = sm.nonparametric.KDEUnivariate(X)
     kde.fit(bw=0.05)
     mode = kde.support[np.argmax(kde.density)]
     label = r"Gamma PDF"
 
-    ax1.hist(df["wave_breaking_duration"], density=True, bins=np.arange(
-        0, 2, 0.1), color="0.15", alpha=0.5)
-    ax1.axvline(df["wave_breaking_duration"].mean(), color="indigo", lw=3, ls="--",
-                label="Mean={0:.1f}s".format(df["wave_breaking_duration"].mean()))
+    ax1.hist(X, density=True, bins=np.arange(
+        0, 1, 0.025), color="0.15", alpha=0.5)
+    ax1.axvline(X.mean(), color="indigo", lw=3, ls="--",
+                label="Mean={0:.2f}".format(X.mean()))
     ax1.axvline(mode, color="coral", lw=3, ls="--",
-                label="Mode={0:.1f}s".format(mode))
+                label="Mode={0:.2f}".format(mode))
     ax1.plot(xpdf, ypdf, color="dodgerblue", lw=3, label=label)
     # ax1.plot(kde.support, kde.density, lw=3, color="k", ls="-", label="KDE")
-    ax1.set_xlabel(r"$T_{br}$ $[s]$")
-    ax1.set_ylabel(r"$p(T_{br})$ $[s]$")
-    ax1.set_xlim(0, 2)
+    ax1.set_xlabel(r"$T_{br}/T_p$ $[-]$")
+    ax1.set_ylabel(r"$p(T_{br})$ $[-]$")
+    ax1.set_xlim(0, 0.5)
     lg = ax1.legend(loc=1, fontsize=10)
     lg.get_frame().set_color("w")
 
     # area
-    pars = stats.pareto.fit(df["wave_breaking_area"])
-    pareto_x = np.arange(0.1, 20, 0.1)
+    X = df["wave_breaking_area"] / ((9.81/2*np.pi) * (1/df["peak_frequency_1"])**2)
+    pars = stats.pareto.fit(X)
+    print(pars)
+    pareto_x = np.arange(0.0001, 0.1, 0.0001)
     ypdf = stats.pareto.pdf(pareto_x, *pars)
     label = r"Pareto PDF"
 
-    ax2.hist(df["wave_breaking_area"], density=True, bins=np.arange(
-        0, 10, 0.5), color="0.15", alpha=0.5)
+    ax2.hist(X, density=True, bins=np.arange(
+        0, 0.1, 0.001), color="0.15", alpha=0.5)
     ax2.plot(pareto_x, ypdf, color="dodgerblue", lw=3, label=label)
-    ax2.set_xlabel(r"$A_{br}$ $[m^2]$")
-    ax2.set_ylabel(r"$p(A_{br})$ $[-]$")
-    ax2.set_xlim(0, 10)
+    ax2.set_xlabel(r"$A_{br} / \left( \frac{g}{2\pi} T_p^{2} \right)$ $[-]$")
+    ax2.set_ylabel(r"$p \left( A_{br} / \left( \frac{g}{2\pi} T_p^{2} \right) \right)$ $[-]$")
+    ax2.set_xlim(0, 0.02)
     lg = ax2.legend(loc=1, fontsize=10)
     lg.get_frame().set_color("w")
 
     # major axis
-    xpdf = np.arange(0., 6, 0.01)
+    xpdf = np.arange(0., 10, 0.01)
     pars = stats.beta.fit(df["max_ellipse_major_axis"] /
                           df["max_ellipse_minor_axis"])
     ypdf = stats.beta.pdf(xpdf, *pars)
@@ -137,7 +140,7 @@ if __name__ == '__main__':
     label = r"Beta PDF"
 
     ax3.hist(df["max_ellipse_major_axis"] / df["max_ellipse_minor_axis"], density=True,
-             bins=np.arange(0, 5, 0.25), color="0.15", alpha=0.5)
+             bins=np.arange(0, 10, 0.25), color="0.15", alpha=0.5)
     ax3.axvline((df["max_ellipse_major_axis"] / df["max_ellipse_minor_axis"]).mean(), color="indigo", lw=3,
                 ls="--", label="Mean={0:.1f}".format((df["max_ellipse_major_axis"] / df["max_ellipse_minor_axis"]).mean()))
     ax3.axvline(mode, color="coral", lw=3, ls="--",
@@ -171,22 +174,22 @@ if __name__ == '__main__':
     ax4.set_xlabel(r"$A_{{br}}/b^{2}$ $[-]$")
     ax4.set_ylabel(r"$p(A_{{br}}/b^{2})$ $[-]$")
     ax4.set_xlim(0, 0.5)
+    ax4.set_ylim(0, 9)
     lg = ax4.legend(loc=1, fontsize=10)
     lg.get_frame().set_color("w")
 
     # Area over time
+    Y = df["wave_breaking_area"]  / ((9.81/2*np.pi) * (1/df["peak_frequency_1"])**2)
+    X = df["wave_breaking_duration"]  / (1/df["peak_frequency_1"])
     model = Pipeline(steps=[("poly",
                              PolynomialFeatures(degree=2,
                                                 interaction_only=False,
                                                 include_bias=True)),
                             ("reg",
                              LinearRegression(fit_intercept=True))])
-    model.fit(df["wave_breaking_duration"].values.reshape(-1, 1),
-              df["wave_breaking_area"])
-    ytrue = np.squeeze(
-        np.array(df["wave_breaking_area"].values.reshape(-1, 1)))
-    ypred = np.squeeze(model.predict(
-        df["wave_breaking_duration"].values.reshape(-1, 1)))
+    model.fit(X.values.reshape(-1, 1), Y)
+    ytrue = np.squeeze(Y.values)
+    ypred = np.squeeze(X.values.reshape(-1, 1))
     r, p = stats.pearsonr(ytrue, ypred)
 
     i = model.steps[1][1].intercept_
@@ -197,9 +200,8 @@ if __name__ == '__main__':
                                                                      c[1], 2),
                                                                  round(c[2], 2))
 
-    ax5.scatter(df["wave_breaking_duration"],
-                df["wave_breaking_area"], color="k", zorder=2)
-    sns.regplot(df["wave_breaking_duration"], df["wave_breaking_area"], x_bins=np.arange(0, 3, 0.15), order=2,
+    ax5.scatter(X, Y, color="k", zorder=2)
+    sns.regplot(X, Y, x_bins=np.arange(0, 0.5, 0.05), order=2,
                 color="dodgerblue", ax=ax5, )
     ax5.text(0.95, 0.95, text, fontsize=9,
              va="top", zorder=100, transform=ax5.transAxes, ha="right",
@@ -211,7 +213,7 @@ if __name__ == '__main__':
     ax5.set_ylabel(r"$A_{br}$ $[m^2]$")
 
     # Lambda
-    ax6.plot(cb, cb**-6, color="k", ls="--", lw=3, label="Phillips (1985)")
+    ax6.plot(cb, cb**-6, color="k", ls="--", lw=3, label=r"$c^{-6}$")
     for wind, _Lambda in zip(target_winds, Lambda):
 
         Lambda_s = running_mean(_Lambda, 10)
@@ -221,6 +223,7 @@ if __name__ == '__main__':
         ax6.scatter(cb, _Lambda, 60, alpha=0.5, facecolor=color, edgecolor="w")
         ax6.plot(cb, Lambda_s, lw=3, zorder=20, color=color)
     ax6.set_yscale("log")
+    # ax6.set_xscale("log")
     ax6.set_ylim(10E-5, 10 * np.max(Lambda))
     ax6.set_xlim(1, 7)
     lg = ax6.legend(loc=1, fontsize=9)
@@ -248,7 +251,7 @@ if __name__ == '__main__':
         sns.despine(ax=ax)
         ax.set_xlim(0)
 
-        ax.text(0.05, 0.95, ascii_lowercase[k] + ")",
+        ax.text(0.035, 0.975, "(" + ascii_lowercase[k] + ")", fontsize=12,
                 va="top", zorder=100, transform=ax.transAxes, ha="left",
                 bbox=dict(
                     boxstyle="square", ec="none", fc="1", lw=1, alpha=0.7))
