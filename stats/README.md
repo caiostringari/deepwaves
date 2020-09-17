@@ -27,4 +27,4 @@ To reproduce the plot seen in the paper, do:
 python make_plot.py
 ```
 
-![](../docs/stats.png)
+![](stats.png)
