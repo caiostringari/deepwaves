@@ -155,8 +155,8 @@ Please use the links below to download pre-trained models:
 |-------|-------|-------------------|
 **VGG16** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Oy_4q4SJpg0TVE8LWXR7L57S0zD8MP7T/view?usp=sharing) | - |
 **ResNet50V2** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Exs1_bpE9Rqk9aPDlzfH4HDgF2wygR4c/view?usp=sharing) | - |
-**InceptionResNetV2** | **Upcoming** | - |
-**MobileNet** | **Upcoming** | - |
+**InceptionResNetV2** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1tKIEWKr6G8RtwsTk1vqg9UJB8cx2M8J5/view?usp=sharing) | - |
+**MobileNet** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/15Roa1tjtoXbn2w-H0OAcfWVNXMKgr_fV/view?usp=sharing) | - |
 **EfficientNet** | **Upcoming** | - |
 
 **Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than the 20K dataset seen in the paper.
