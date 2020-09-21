@@ -461,6 +461,12 @@ python interpret.py --data "path/to/gradcam" --model "VGG16.h5" -o "path/to/outp
 
 ![](docs/aquaalta_naive_plus_robust.gif)
 
+**La Jument (2019):**
+
+**Note:** This is a production example. The model has not seen this data before.
+
+![](docs/production.gif)
+
 **Grad-CAM (Black Sea):**
 
 ![](docs/grad_cam.gif)
