@@ -31,14 +31,18 @@ This repository contains code and data to reproduce the results of the paper **D
 
 ```bash
 # create a new environment
-conda create --name tf python=3.7
+conda create --name tf python=3
 
 # activate your new environment
 conda activate tf
 
 # If you have a nvidia GPU installed and properly configured
-conda install tensorflow-gpu=2
-conda install tensorboard
+pip install --upgrade pip
+pip install tensorflow
+pip install tensorflow_addons
+
+# conda install tensorflow-gpu=2
+# conda install tensorboard
 
 # Natsort - better file sorting
 conda install natsort
@@ -157,7 +161,7 @@ Please use the links below to download pre-trained models:
 **ResNet50V2** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Exs1_bpE9Rqk9aPDlzfH4HDgF2wygR4c/view?usp=sharing) | - |
 **InceptionResNetV2** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1tKIEWKr6G8RtwsTk1vqg9UJB8cx2M8J5/view?usp=sharing) | - |
 **MobileNet** | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/15Roa1tjtoXbn2w-H0OAcfWVNXMKgr_fV/view?usp=sharing) | - |
-**EfficientNet** | **Upcoming** | - |
+**EfficientNet** |[![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1_JEAJYfD3-QUSEReJOI7aI2QBr4LlafP/view?usp=sharing) | - |
 
 **Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than the 20K dataset seen in the paper.
 
@@ -171,7 +175,7 @@ Please use the links below to download pre-trained models:
 **MobileNet** | **Upcoming** | - |
 **EfficientNet** | **Upcoming** | - |
 
-**Note**: These models were trained from the using initial weights from the 200K model.
+**Note**: Work in progress.
 
 
 ## 4. Model Performance

@@ -70,6 +70,7 @@ except Exception:
     pass
     print(ImportError("\nWarning: run pip install -U --pre efficientnet"))
 
+
 if __name__ == '__main__':
 
     print("\nClassifiying wave breaking data, please wait...\n")
@@ -143,7 +144,7 @@ if __name__ == '__main__':
                         default=0.5,
                         required=False,
                         help="Dropout. Default is 0.5.",)
-    # Dropout
+    # image size
     parser.add_argument("--input-size", "-input-size",
                         nargs=2,
                         action="store",
