@@ -30,6 +30,9 @@ This repository contains code and data to reproduce the results of the paper **D
 ## 1. Dependencies
 
 ```bash
+# install GIT
+conda install git
+
 # create a new environment
 conda create --name tf python=3
 
@@ -39,7 +42,11 @@ conda activate tf
 # If you have a nvidia GPU installed and properly configured
 pip install --upgrade pip
 pip install tensorflow
+
+# extras
+pip install -q git+https://github.com/tensorflow/examples.git
 pip install tensorflow_addons
+conda install numba
 
 # conda install tensorflow-gpu=2
 # conda install tensorboard
@@ -112,28 +119,27 @@ updated from the scratch here. These models have no knowledge of the present dat
 python train.py --data "train/" --backbone "VGG16" --model "vgg_test" --logdir "logs/" --random-state 11 --validation-size 0.2 --learning-rate 0.00001 --epochs 200 --batch-size 64 --dropout 0.5 --input-size 256 256
 ```
 
-**Arguments:**
+<details>
+  <summary> Arguments: </summary>
+  - `--data` Input train data path.
 
-- `--data` Input train data path.
+  - `--model ` Model name.
 
-- `--model ` Model name.
+  - `--backbone` Which backbone to use. See above.
 
-- `--backbone` Which backbone to use. See above.
+  - `--random-state` Random seed for reproducibility. Default is 11.
 
-Optional:
+  - `--validation-size` Size of the validation dataset. Default is 0.2.
 
-- `--random-state` Random seed for reproducibility. Default is 11.
+  - `--epochs` Number of epochs (iterations) to train the model. Default is 200.
 
-- `--validation-size` Size of the validation dataset. Default is 0.2.
+  - `--batch-size` Number of images to process in each step. Decrease if running into memory issues. Default is 64.
 
-- `--epochs` Number of epochs (iterations) to train the model. Default is 200.
+  - `--dropout` Droput percentage. Default is 0.5.
 
-- `--batch-size` Number of images to process in each step. Decrease if running into memory issues. Default is 64.
-
-- `--dropout` Droput percentage. Default is 0.5.
-
-- `--input-size` Image input size. Decrease if running into memory issues. Default is 256x256px.
-
+  - `--input-size` Image input size. Decrease if running into memory issues. Default is 256x256px.
+</details>
+<br/>
 
 The neural network looks something like this:
 
@@ -192,15 +198,19 @@ To evaluate a pre-trained model on test data, use the [```test```](src/test.py) 
 python test.py --data "path/to/test/data/" --model "VGG16.h5" --threshold 0.5 -- output "path/to/results.csv"
 ```
 
-**Arguments:**
+<details>
+  <summary> Arguments: </summary>
 
-- `--data` Input test data. Use same structure as when training.
+  - `--data` Input test data. Use same structure as when training.
 
-- `--model ` Pre-trained model.
+  - `--model ` Pre-trained model.
 
-- `--threshold` Threshold for binary classification. Default is 0.5
+  - `--threshold` Threshold for binary classification. Default is 0.5
 
-- `--output` path to save the results.
+  - `--output` path to save the results.
+</details>
+<br/>
+
 
 The `classification report` with be printed on the screen. For example:
 
@@ -237,13 +247,17 @@ To plot the training curves and a confusion matrix, do:
 python plot_history_and_confusion_matrix.py --history "path/to/history.csv" --results "path/to/results.csv" --output "figure.png"
 ```
 
-**Arguments:**
+<details>
+  <summary> Arguments: </summary>
 
-- `--history` Training history. Comes from `train_wave_breaking_classifier_v2.py`.
+  - `--history` Training history. Comes from `train_wave_breaking_classifier_v2.py`.
 
-- `--results ` Classification results from the test data. Comes from `test_wave_breaking_classifier.py`.
+  - `--results ` Classification results from the test data. Comes from `test_wave_breaking_classifier.py`.
 
-- `--output` Figure name.
+  - `--output` Figure name.
+</details>
+<br/>
+
 
 The results look like this:
 ![](docs/hist_cm.png)
@@ -307,15 +321,18 @@ pred
 python predict.py --data "pred/" --model "VGG16.h5" --threshold 0.5 --output "results.csv"
 ```
 
-**Arguments:**
+<details>
+  <summary> Arguments: </summary>
 
-- `--data` Input test data.
+  - `--data` Input test data.
 
-- `--model ` Pre-trained model.
+  - `--model ` Pre-trained model.
 
-- `--threshold` Threshold for binary classification. Default is 0.5
+  - `--threshold` Threshold for binary classification. Default is 0.5
 
-- `--output` A csv file with the classification results.
+  - `--output` A csv file with the classification results.
+</details>
+<br/>
 
 ### 5.2. Predicting from the Results of the Naïve Detector
 
@@ -327,67 +344,41 @@ Use [```predict from naïve candidates```](util/predict_from_naive_candidates.py
 python predict_from_naive_candidates.py --debug --input "naive_results.csv" --model "path/to/model.h5" --frames "path/to/frames/folder/"  --region-of-interest "region_of_interest.csv" --output "robust_results.csv" --temporary-path "tmp" --frames-to-plot 1000 --threshold 0.5
 ```
 
-**Arguments:**
+<details>
+  <summary> Arguments: </summary>
 
-- ```--debug``` Runs in debug mode and will save output plots.
+  - ```--debug``` Runs in debug mode and will save output plots.
 
-- ```-i [--input]``` Input data obtained from ```naive_wave_breaking_detector```.
+  - ```-i [--input]``` Input data obtained from ```naive_wave_breaking_detector```.
 
-- ```-m [--model]``` Pre-trained Tensorflow model.
+  - ```-m [--model]``` Pre-trained Tensorflow model.
 
-- ```-o [--output]``` Output file name (see below for explanation).
+  - ```-o [--output]``` Output file name (see below for explanation).
 
-- ```-frames [--frames]``` Input path with images.
+  - ```-frames [--frames]``` Input path with images.
 
-- ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](util/minimum_bounding_geometry.py) to generate a valid input file.
+  - ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](util/minimum_bounding_geometry.py) to generate a valid input file.
 
-- ```-temporary-path``` Output path for debug plots.
+  - ```-temporary-path``` Output path for debug plots.
 
-- ```--frames-to-process``` Number of frames to process.
+  - ```--frames-to-process``` Number of frames to process.
 
-- ```--from-frame``` Start frame.
+  - ```--from-frame``` Start frame.
 
-- ```--regex``` Regular expression to find input frames. Default is `"[0-9]{6,}"`.
+  - ```--regex``` Regular expression to find input frames. Default is `"[0-9]{6,}"`.
 
-- ```--threshold``` Threshold for activation in the last (sigmoid) layer of the model. Default is `0.5`.
+  - ```--threshold``` Threshold for activation in the last (sigmoid) layer of the model. Default is `0.5`.
 
-***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, and `frame`.
+  ***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, and `frame`.
+</details>
+<br/>
+
 
 The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) but adding a extra column with the results of the classification.
 
-### 5.3 Clustering Wave Breaking Events
+### 5.3. Plotting Wave Breaking Detection Results
 
-To cluster wave breaking events in time and space use [```cluster.py```](src/cluster.py). This script can use the results of [```naive_wave_breaking_detector.py```](util/naive_wave_breaking_detector.py) directly but this is not recommended. It is recommended that you narrow down the candidates for clustering using [```predict_from_naive_candidates.py```](util/predict_from_naive_candidates.py) first.
-
-**Example:**
-
-```bash
-python cluster.py -i "active_wave_breaking_events.csv" -o "clusters.csv" --cluster method "DBSCAN" --eps 10 -min-samples 10
-```
-
-**Arguments:**
-
-- ```-i [--input]``` Input path with images
-
-- ```-o [--output]``` Output file name (see below for explanation).
-
-- ```--cluster-method``` Either ```DBSCAN``` or ```OPTICS```. ```DBSCAN``` is recommended.
-
-- ```--eps``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
-
-- ```--min-samples``` Mandatory parameter for ```DBSCAN``` or ```OPTICS```. See [here](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html) for details.
-
-- ```--njobs``` Number of jobs to use.
-
-- ```--chunk-size``` Maximum number of rows to process at a time. Default is 1000. Use lower values to avoid out-of-memory errors.
-
-**Note**: The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, `frame`.
-
-The output of this script is a comma-separated value (csv) file. It looks like exactly like the output of [```naive wave breaking detector```](util/naive_wave_breaking_detector.py) with the addition of a column named ```wave_breaking_event```.
-
-### 5.4. Plot Wave Breaking Detection Results
-
-Plot the results of the wave breaking detection algorithms. Can handle outputs of any algorithm, as long as the input data is correct. Ideally the results from [```cluster.py```](src/cluster.py) are used as input.
+Plot the results of the wave breaking detection algorithms. Can handle outputs of any algorithm, as long as the input data is correct. Ideally the results from [```cluster.py```](tracking/cluster.py) are used as input.
 
 **Example:**
 
@@ -395,30 +386,28 @@ Plot the results of the wave breaking detection algorithms. Can handle outputs o
 python plot_wave_breaking_detection_results.py --input "clustered_events.csv" --output "path/to/output/" --frames "path/to/frames/" --region-of-interest "path/to/roi.csv" --frames-to-plot 1000
 ```
 
-**Arguments:**
+<details>
+  <summary> Arguments: </summary>
 
-- ```-i [--input]``` Input csv file.
+  - ```-i [--input]``` Input csv file.
 
-- ```-o [--output]``` Output path.
+  - ```-o [--output]``` Output path.
 
-- ```-frames-path``` Path with frames.
+  - ```-frames-path``` Path with frames.
 
-- ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](../../util/minimum_bounding_geometry.py) to generate a valid input file.
+  - ```--region-of-interest``` File with region of interest. Use [```minimun bounding geometry```](../../util/minimum_bounding_geometry.py) to generate a valid input file.
 
-- ```--frames-to-plot``` Number of frames to plot.
+  - ```--frames-to-plot``` Number of frames to plot.
 
-- ```--from-frame``` Number of frames to plot.
+  - ```--from-frame``` Number of frames to plot.
 
-- ```--regex``` Regular expression to find input frames. Default is `"[0-9]{6,}"`.
+  - ```--regex``` Regular expression to find input frames. Default is `"[0-9]{6,}"`.
 
 ***Note:*** The input data __*must*__ have at least the following entries: `ic`, `jc`, `ir`, `frame`, `wave_breaking_event`.
+</details>
 
 
-## 6. Wave Breaking Statistics
-
-Please refer to [```Wave Breaking Statistics```](stats/README.md).
-
-## 7. Model Interpretation
+## 6. Model Interpretation
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1ERFWwwRmLtfzIOKSK_x5d6jpIAi2rM6d?usp=sharing) **|** [![Jupyter Notebook](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](notebook/interpret.ipynb)
 
@@ -439,19 +428,35 @@ gradcam
 python interpret.py --data "path/to/gradcam" --model "VGG16.h5" -o "path/to/output"
 ```
 
-**Arguments:**
+<details>
+  <summary> Arguments: </summary>
 
-- ```-data``` Input image data path.
+  - ```-data``` Input image data path.
 
-- ```-o [--output]``` Output path.
+  - ```-o [--output]``` Output path.
 
-- ```-model``` pre-trained VGG16 model.
-
-
-**Note**: This script will only work with VVG16 models.
+  - ```-model``` pre-trained VGG16 model.
 
 
-## 8. Gallery
+  **Note**: This script will only work with VVG16 models.
+</details>
+<br/>
+
+
+## 7. Active Wave Breaking Segmentation
+
+The neural networks developed here call also be used for image segmentation. Please refer to [```Image Segmentation```](segmentation/README.md).
+
+## 8. Wave Tracking
+
+Please refer to [```Wave Tracking```](tracking/README.md).
+
+## 9. Wave Breaking Statistics
+
+Please refer to [```Wave Breaking Statistics```](stats/README.md).
+
+
+## Gallery
 
 **La Jument:**
 
@@ -465,44 +470,55 @@ python interpret.py --data "path/to/gradcam" --model "VGG16.h5" -o "path/to/outp
 
 ![](docs/aquaalta_naive_plus_robust.gif)
 
-**La Jument (2019):**
+<!-- **La Jument (2019):**
 
 **Note:** This is a production example. The model has not seen this data before.
 
-![](docs/production.gif)
+![](docs/production.gif) -->
 
 **Grad-CAM (Black Sea):**
 
 ![](docs/grad_cam.gif)
 
-## 9. Standard Variable Names
+**Image Segmentation (La Jument):**
+
+![](docs/segmented_jument_2019.gif)
+
+## Standard Variable Names
 
 The following variables are standard across this repository and scripts that output these quantities should use these names. If a given script has extra output variables, these are documented in each script.
 
-| Variable              | Description                                                                                                                                                  |
-|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `x`                   |  x-coordinate in metric coordinates.                                                                                                                         |
-| `y`                   |  y-coordinate in metric coordinates.                                                                                                                         |
-| `z`                   |  z-coordinate in metric coordinates.                                                                                                                         |
-| `time`                |  date and time. Use a format that [pandas.to_datetime()](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_datetime.html) can understand. |
-| `frame`               |  sequential number.                                                                                                                                          |
-| `i`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
-| `j`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
-| `ic`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
-| `jc`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
-| `xc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
-| `yc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
-| `ir`                  |  radius in the i-direction.                                                                                                                                  |
-| `jr`                  |  radius in the j-direction.                                                                                                                                  |
-| `xr`                  |  radius in the x-direction.                                                                                                                                  |
-| `yr`                  |  radius in the y-direction.                                                                                                                                  |
-| `theta_ij`            |  angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
-| `theta_xy`            |  angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
-| `wave_breaking_event` |  unique wave breaking event id.                                                                                                                              |
-| `vx`                  |  velocity in the x-direction in m/s.                                                                                                                         |
-| `vy`                  |  velocity in the y-direction in m/s.                                                                                                                         |
-| `vi`                  |  velocity in the x-direction in pixels/frame.                                                                                                                |
-| `vj`                  |  velocity in the y-direction in pixels/frame.                                                                                                                |                                 |
+<details>
+  <summary> Variables </summary>
+
+  | Variable              | Description                                                                                                                                                  |
+  |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+  | `x`                   |  x-coordinate in metric coordinates.                                                                                                                         |
+  | `y`                   |  y-coordinate in metric coordinates.                                                                                                                         |
+  | `z`                   |  z-coordinate in metric coordinates.                                                                                                                         |
+  | `time`                |  date and time. Use a format that [pandas.to_datetime()](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.to_datetime.html) can understand. |
+  | `frame`               |  sequential number.                                                                                                                                          |
+  | `i`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
+  | `j`                   |  pixel coordinate in pixel units. Use [Matplotlib coordinate system](https://matplotlib.org/3.1.1/tutorials/intermediate/imshow_extent.html).                |
+  | `ic`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
+  | `jc`                  |  center of a circle or ellipse in pixel coordinates.                                                                                                         |
+  | `xc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
+  | `yc`                  |  center of a circle or ellipse in metric coordinates.                                                                                                        |
+  | `ir`                  |  radius in the i-direction.                                                                                                                                  |
+  | `jr`                  |  radius in the j-direction.                                                                                                                                  |
+  | `xr`                  |  radius in the x-direction.                                                                                                                                  |
+  | `yr`                  |  radius in the y-direction.                                                                                                                                  |
+  | `theta_ij`            |  angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
+  | `theta_xy`            |  angle of rotation of an ellipse with respect to the x-axis counter-clockwise.                                                                               |
+  | `wave_breaking_event` |  unique wave breaking event id.                                                                                                                              |
+  | `vx`                  |  velocity in the x-direction in m/s.                                                                                                                         |
+  | `vy`                  |  velocity in the y-direction in m/s.                                                                                                                         |
+  | `vi`                  |  velocity in the x-direction in pixels/frame.                                                                                                                |
+  | `vj`                  |  velocity in the y-direction in pixels/frame.                                                                                                                |                                 |
+
+</details>
+<br/>
+
 
 ## Disclaimer
 
