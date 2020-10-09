@@ -31,52 +31,70 @@ This repository contains code and data to reproduce the results of the paper **D
 
 ## 1. Dependencies
 
+### Using [`conda`](https://docs.conda.io/en/latest/):
+
+- **Windows**
 ```bash
-# install GIT
-conda install git
-
-# create a new environment
-conda create --name tf python=3
-
-# activate your new environment
-conda activate tf
-
-# If you have a nvidia GPU installed and properly configured
-pip install --upgrade pip
-pip install tensorflow
-
-# extras
-pip install -q git+https://github.com/tensorflow/examples.git
-pip install tensorflow_addons
-conda install numba
-
-# conda install tensorflow-gpu=2
-# conda install tensorboard
-
-# Natsort - better file sorting
-conda install natsort
-
-# Classical machine learning
-conda install pandas scikit-learn scikit-image
-
-# Extra thresholding methods
-pip install pythreshold
-
-# fitting circles to data
-pip install miniball
-
-# parallel computations
-pip install pebble
-
-# Matplotlib and seaborn
-conda install matplotlib seaborn
-
-# netCDF support
-conda install netCDF4 xarray
-
-# make your life easier with ipython
-conda install ipython
+conda env create -f environment_win.yml
 ```
+
+- **Linux**
+```bash
+conda env create -f environment_linux.yml
+```
+
+
+### Manually
+<details>
+  <summary> Package list </summary>
+
+  ```bash
+  # install GIT
+  conda install git
+
+  # create a new environment
+  conda create --name tf python=3
+
+  # activate your new environment
+  conda activate tf
+
+  # If you have a nvidia GPU installed and properly configured
+  pip install --upgrade pip
+  pip install tensorflow
+
+  # extras
+  pip install -q git+https://github.com/tensorflow/examples.git
+  pip install tensorflow_addons
+  conda install numba
+
+  # Natsort - better file sorting
+  conda install natsort
+
+  # Classical machine learning
+  conda install pandas scikit-learn scikit-image
+
+  # Extra thresholding methods
+  pip install pythreshold
+
+  # fitting circles to data
+  pip install miniball
+
+  # parallel computations
+  pip install pebble
+
+  # Matplotlib and seaborn
+  conda install matplotlib seaborn
+
+  # netCDF support
+  conda install netCDF4 xarray
+
+  # make your life easier with ipython
+  conda install ipython
+  ```
+</details>
+<br/>
+
+
 
 ## 2. Data
 
@@ -139,8 +157,8 @@ python train.py --data "train/" --backbone "VGG16" --model "vgg_test" --logdir "
 -   `--dropout` Droput percentage. Default is 0.5.
 
 -   `--input-size` Image input size. Decrease if running into memory issues. Default is 256x256px.
-    </details>
-    <br/>
+</details>
+<br/>
 
 The neural network looks something like this:
 
