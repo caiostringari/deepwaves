@@ -43,7 +43,6 @@ conda env create -f environment_win.yml
 conda env create -f environment_linux.yml
 ```
 
-
 ### Manually
 <details>
   <summary> Package list </summary>
@@ -92,9 +91,6 @@ conda env create -f environment_linux.yml
   conda install ipython
   ```
 </details>
-<br/>
-
-
 
 ## 2. Data
 
@@ -110,7 +106,7 @@ conda env create -f environment_linux.yml
 | **Train (20k)**           | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1uUcSW5s_jm5W-AQeeNxJKbIr6CR5fJIP/view?usp=sharing) | -                |
 | **Test (1k)**             | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1A6IK9IQjFN9JMNx3bUkcWdlO8YN8PbaC/view?usp=sharing) | -                |
 | **Black Sea (200k)**      | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1hh6tMpfEXHNWJm0OQp_d_RMZyeQS55yq/view?usp=sharing) | -                |
-| **La Jument 2019 (100k)** | **Upcoming**                                                                                                             | -                |
+| **La Jument 2019 (10k)** | **Upcoming**                                                                                                             | -                |
 
 ## 3. Training
 
@@ -190,7 +186,7 @@ Please use the links below to download pre-trained models:
 
 **Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than the 20K dataset seen in the paper.
 
-**La Jument (100K dataset)**
+**La Jument (10K dataset)**
 
 | Model                 | Link         | Alternative link |
 | --------------------- | ------------ | ---------------- |
@@ -450,7 +446,7 @@ python interpret.py --data "path/to/gradcam" --model "VGG16.h5" -o "path/to/outp
 
 ## 7. Active Wave Breaking Segmentation
 
-The neural networks developed here call also be used for image segmentation. Please refer to [`Image Segmentation`](segmentation/README.md).
+The neural networks developed here can also be used for image segmentation. Please refer to [`Image Segmentation`](segmentation/README.md).
 
 ## 8. Wave Tracking
 
