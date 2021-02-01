@@ -92,8 +92,8 @@ conda env create -f environment_linux.yml
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------- |
 | **Train (10k)**           | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Qko68JTZT-JLHKwSJJvvKUQEjmcy0V0j/view?usp=sharing) | -                |
 | **Train (20k)**           | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1uUcSW5s_jm5W-AQeeNxJKbIr6CR5fJIP/view?usp=sharing) | -                |
-| **Test (1k)**             | Upcoming | -                |
-| **Black Sea (200k)**      | Upcoming | -                |
+| **Test (1k)**             | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1A6IK9IQjFN9JMNx3bUkcWdlO8YN8PbaC/view?usp=sharing) | -                |
+| **Black Sea (200k)**      | **Upcoming** | -                |
 | **La Jument 2019 (10k)** | **Upcoming**                                                                                                             | -                |
 
 ## 3. Training

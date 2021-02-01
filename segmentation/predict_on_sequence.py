@@ -102,9 +102,12 @@ def display_mask(val_preds, i):
 def make_plot(img, df, roi_patch=False, total_frames=-1, out_path="plt",
               block_shape=[256, 256]):
     """Plot the results."""
-    # crate a mask
-    brk_mask = np.zeros([img.shape[0], img.shape[0]]).astype(int)
-    brk_mask[df["i"].values, df["j"].values] = 1
+    # create a mask
+    try:
+        brk_mask = np.zeros([img.shape[0], img.shape[0]]).astype(int)
+        brk_mask[df["i"].values, df["j"].values] = 1
+    except Exception:
+        brk_mask = np.zeros([img.shape[0], img.shape[0]]).astype(int)
     brk_mask = np.ma.masked_less(brk_mask, 1)
     binmap = mpl.colors.ListedColormap("red")
 

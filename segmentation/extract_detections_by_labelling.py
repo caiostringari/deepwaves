@@ -173,7 +173,7 @@ if __name__ == '__main__':
             mk1 = np.zeros(frame.shape)
             mk1[df_frm["i"].values, df_frm["j"].values] = 1
 
-            # lalbe the mask
+            # label the mask
             lbl = label(mk1, connectivity=connectivity)
 
             # get region properties
