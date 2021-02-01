@@ -64,13 +64,10 @@ conda env create -f environment_linux.yml
   # extras
   pip install -q git+https://github.com/tensorflow/examples.git
   pip install tensorflow_addons
-  conda install numba
 
-  # Natsort - better file sorting
-  conda install natsort
-
-  # Classical machine learning
-  conda install pandas scikit-learn scikit-image
+  # conda packages
+  conda install -y numba natsort pandas scikit-learn scikit-image natsort  matplotlib seaborn netCDF4 xarray ipython tqdm
+  pip install h5netcdf
 
   # Extra thresholding methods
   pip install pythreshold
@@ -80,15 +77,6 @@ conda env create -f environment_linux.yml
 
   # parallel computations
   pip install pebble
-
-  # Matplotlib and seaborn
-  conda install matplotlib seaborn
-
-  # netCDF support
-  conda install netCDF4 xarray
-
-  # make your life easier with ipython
-  conda install ipython
   ```
 </details>
 
@@ -105,7 +93,7 @@ conda env create -f environment_linux.yml
 | **Train (10k)**           | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Qko68JTZT-JLHKwSJJvvKUQEjmcy0V0j/view?usp=sharing) | -                |
 | **Train (20k)**           | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1uUcSW5s_jm5W-AQeeNxJKbIr6CR5fJIP/view?usp=sharing) | -                |
 | **Test (1k)**             | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1A6IK9IQjFN9JMNx3bUkcWdlO8YN8PbaC/view?usp=sharing) | -                |
-| **Black Sea (200k)**      | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1hh6tMpfEXHNWJm0OQp_d_RMZyeQS55yq/view?usp=sharing) | -                |
+| **Black Sea (200k)**      | Upcoming | -                |
 | **La Jument 2019 (10k)** | **Upcoming**                                                                                                             | -                |
 
 ## 3. Training
@@ -174,7 +162,7 @@ Please use the links below to download pre-trained models:
 | **MobileNet**         | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1N0N03QDevACbOAi0Vq9tAMShYBX6s8EA/view?usp=sharing) | -                |
 | **EfficientNet**      | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1Lb1bYKfIBZXGV4X4tzSXuj-abIvFiJoE/view?usp=sharing) | -                |
 
-**Black Sea (200k dataset)**
+<!-- **Black Sea (200k dataset)**
 
 | Model                 | Link                                                                                                                     | Alternative link |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------- |
@@ -184,7 +172,7 @@ Please use the links below to download pre-trained models:
 | **MobileNet**         | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/15Roa1tjtoXbn2w-H0OAcfWVNXMKgr_fV/view?usp=sharing) | -                |
 | **EfficientNet**      | [![](badges/google_drive_badge.svg)](https://drive.google.com/file/d/1_JEAJYfD3-QUSEReJOI7aI2QBr4LlafP/view?usp=sharing) | -                |
 
-**Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than the 20K dataset seen in the paper.
+**Note**: These models were trained from the scratch with data processed by Pedro Guimarães. Overall, they have accuracy scores higher than 95% but the training data is less general than the 20K dataset seen in the paper. -->
 
 **La Jument (10K dataset)**
 
