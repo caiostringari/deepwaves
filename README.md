@@ -1,8 +1,9 @@
-<!-- [![](badges/overleaf_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw) [![](badges/arxiv_badge.svg)](https://www.overleaf.com/read/mhprcfwhryfw) -->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4495600.svg)](https://doi.org/10.5281/zenodo.4495600)
+
 
 # Deep Neural Networks for Active Wave Breaking Classification
 
-This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification** currently under review.
+This repository contains code and data to reproduce the results of the paper **Deep Neural Networks for Active Wave Breaking Classification** published by [**Scientific Reports**](https://www.nature.com/articles/s41598-021-83188-y).
 
 ## Contents
 
